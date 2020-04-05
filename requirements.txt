@@ -1,0 +1,9 @@
+pyrr
+torch
+rospkg
+numpy
+scipy
+opencv_python==3.4.1.15
+Pillow
+torchvision
+PyYAML

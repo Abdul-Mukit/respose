@@ -105,6 +105,8 @@ class DopeNetwork(nn.Module):
         super(DopeNetwork, self).__init__()
 
         self.stop_at_stage = stop_at_stage
+        self.numBeliefMap = numBeliefMap
+        self.numAffinity = numAffinity
 
         vgg_full = models.vgg19(pretrained=False).features
         self.vgg = nn.Sequential()
@@ -120,82 +122,92 @@ class DopeNetwork(nn.Module):
 
         # print('---Belief------------------------------------------------')
         # _2 are the belief map stages
-        self.m1_2 = DopeNetwork.create_stage(128, numBeliefMap, True)
-        self.m2_2 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap, False)
-        self.m3_2 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap, False)
-        self.m4_2 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap, False)
-        self.m5_2 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap, False)
-        self.m6_2 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap, False)
+        self.cas1 = DopeNetwork.create_stage(128,
+                                             numBeliefMap + numAffinity, True)
+        self.cas2 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
+        self.cas3 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
+        self.cas4 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
+        self.cas5 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
+        self.cas6 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
 
-        # print('---Affinity----------------------------------------------')
-        # _1 are the affinity map stages
-        self.m1_1 = DopeNetwork.create_stage(128, numAffinity, True)
-        self.m2_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numAffinity, False)
-        self.m3_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numAffinity, False)
-        self.m4_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numAffinity, False)
-        self.m5_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numAffinity, False)
-        self.m6_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
-                                             numAffinity, False)
+        # # print('---Affinity----------------------------------------------')
+        # # _1 are the affinity map stages
+        # self.m1_1 = DopeNetwork.create_stage(128, numAffinity, True)
+        # self.m2_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        #                                      numAffinity, False)
+        # self.m3_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        #                                      numAffinity, False)
+        # self.m4_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        #                                      numAffinity, False)
+        # self.m5_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        #                                      numAffinity, False)
+        # self.m6_1 = DopeNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        #                                      numAffinity, False)
 
     def forward(self, x):
         '''Runs inference on the neural network'''
+        numBeliefMap = self.numBeliefMap
+        numAffinity = self.numAffinity
 
-        out1 = self.vgg(x)
+        in1 = self.vgg(x)
 
-        out1_2 = self.m1_2(out1)
-        out1_1 = self.m1_1(out1)
+        out1 = self.cas1(in1)
+        # out1_1 = self.m1_1(in1)
 
         if self.stop_at_stage == 1:
-            return [out1_2], \
-                   [out1_1]
+            return [out1[:, :, :numBeliefMap]], \
+                   [out1[:, :, numAffinity:]]
 
-        out2 = torch.cat([out1_2, out1_1, out1], 1)
-        out2_2 = self.m2_2(out2)
-        out2_1 = self.m2_1(out2)
+        in2 = torch.cat([out1, in1], 1)
+        out2 = self.cas2(in2)
+        # out2_1 = self.m2_1(in2)
 
         if self.stop_at_stage == 2:
-            return [out1_2, out2_2], \
-                   [out1_1, out2_1]
+            return [out1[:, :, :numBeliefMap], out2[:, :, :numBeliefMap]], \
+                   [out1[:, :, numAffinity:], out2[:, :, numAffinity:]]
 
-        out3 = torch.cat([out2_2, out2_1, out1], 1)
-        out3_2 = self.m3_2(out3)
-        out3_1 = self.m3_1(out3)
+        in3 = torch.cat([out2, in1], 1)
+        out3 = self.cas3(in3)
+        # out3_1 = self.m3_1(in3)
 
         if self.stop_at_stage == 3:
-            return [out1_2, out2_2, out3_2], \
-                   [out1_1, out2_1, out3_1]
+            return [out1[:, :, :numBeliefMap], out2[:, :, :numBeliefMap], out3[:, :, :numBeliefMap]], \
+                   [out1[:, :, numAffinity:], out2[:, :, numAffinity:], out3[:, :, numAffinity:]]
 
-        out4 = torch.cat([out3_2, out3_1, out1], 1)
-        out4_2 = self.m4_2(out4)
-        out4_1 = self.m4_1(out4)
+        in4 = torch.cat([out3, in1], 1)
+        out4 = self.cas4(in4)
+        # out4_1 = self.m4_1(in4)
 
         if self.stop_at_stage == 4:
-            return [out1_2, out2_2, out3_2, out4_2], \
-                   [out1_1, out2_1, out3_1, out4_1]
+            return [out1[:, :, :numBeliefMap], out2[:, :, :numBeliefMap], out3[:, :, :numBeliefMap],
+                    out4[:, :, :numBeliefMap]], \
+                   [out1[:, :, numAffinity:], out2[:, :, numAffinity:], out3[:, :, numAffinity:],
+                    out4[:, :, numAffinity:]]
 
-        out5 = torch.cat([out4_2, out4_1, out1], 1)
-        out5_2 = self.m5_2(out5)
-        out5_1 = self.m5_1(out5)
+        in5 = torch.cat([out4, in1], 1)
+        out5 = self.cas5(in5)
+        # out5_1 = self.m5_1(in5)
 
         if self.stop_at_stage == 5:
-            return [out1_2, out2_2, out3_2, out4_2, out5_2], \
-                   [out1_1, out2_1, out3_1, out4_1, out5_1]
+            return [out1[:, :, :numBeliefMap], out2[:, :, :numBeliefMap], out3[:, :, :numBeliefMap],
+                    out4[:, :, :numBeliefMap], out5[:, :, :numBeliefMap]], \
+                   [out1[:, :, numAffinity:], out2[:, :, numAffinity:], out3[:, :, numAffinity:],
+                    out4[:, :, numAffinity:], out5[:, :, numAffinity:]]
 
-        out6 = torch.cat([out5_2, out5_1, out1], 1)
-        out6_2 = self.m6_2(out6)
-        out6_1 = self.m6_1(out6)
+        in6 = torch.cat([out5, in1], 1)
+        out6 = self.cas6(in6)
+        # out6_1 = self.m6_1(in6)
 
-        return [out1_2, out2_2, out3_2, out4_2, out5_2, out6_2], \
-               [out1_1, out2_1, out3_1, out4_1, out5_1, out6_1]
+        return [out1[:, :, :numBeliefMap], out2[:, :, :numBeliefMap], out3[:, :, :numBeliefMap],
+                out4[:, :, :numBeliefMap], out5[:, :, :numBeliefMap], out6[:, :, :numBeliefMap]], \
+               [out1[:, :, numAffinity:], out2[:, :, numAffinity:], out3[:, :, numAffinity:],
+                out4[:, :, numAffinity:], out5[:, :, numAffinity:], out6[:, :, numAffinity:]]
+        #TODO: return ouput as [out1, out2, out3, ...] then create a function that does this redistribution.
 
     @staticmethod
     def create_stage(in_channels, out_channels, first=False):
@@ -1355,6 +1367,9 @@ def _runnetwork(epoch, loader, train=True):
         data = Variable(targets['img'].cuda(opt.gpuids[0]))
 
         output_belief, output_affinities = net(data)
+        print(output_belief.__len__())
+        print(output_affinities.__len__())
+        print(net)
 
         if train:
             optimizer.zero_grad()

@@ -11,6 +11,7 @@ weights: {
     #"cautery":"net_epoch_217.pth" # The 48 hour model
 #    "cautery":"cautery_s6_60.pth"
      "cautery_hand":"net_hc1_60_v1.pth"
+#     "cautery_hand":"net_machineTest_2.pth"
 #     "face":"net_face_60.pth"
 }
 

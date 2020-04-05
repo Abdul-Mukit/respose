@@ -235,9 +235,16 @@ class ModelData(object):
         '''Loads network model from disk with given path'''
         model_loading_start_time = time.time()
         print("Loading DOPE model '{}'...".format(path))
+        device = torch.device("cuda:0")
         net = DopeNetwork()
-        net = torch.nn.DataParallel(net, [0]).cuda()
-        net.load_state_dict(torch.load(path))
+        net = net.to(device)  # For model not trained with dataparallel
+        try:
+            net = net.to(device)  # For model not trained with dataparallel
+            net.load_state_dict(torch.load(path))
+        except:
+            net = torch.nn.DataParallel(net, [0]).cuda()  # For model trained with dataparallel
+            net.load_state_dict(torch.load(path))
+
         net.eval()
         print('    Model loaded in {} seconds.'.format(
             time.time() - model_loading_start_time))

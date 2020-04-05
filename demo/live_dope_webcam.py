@@ -181,11 +181,3 @@ while True:
 
     cv2.imshow('Open_cv_image', open_cv_image)
     cv2.waitKey(1)
-
-
-
-
-
-
-
-

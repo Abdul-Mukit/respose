@@ -19,5 +19,8 @@ venv
 *.fbx
 Models
 temp
-
+train/Datasets
+*.csv
+*.txt
+.gitignore
 

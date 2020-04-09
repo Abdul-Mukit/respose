@@ -7,6 +7,8 @@ import pyrealsense2 as rs
 
 from PIL import Image
 from PIL import ImageDraw
+import time
+
 
 
 ### Code to visualize the neural network output
@@ -144,6 +146,7 @@ cap = cv2.VideoCapture(0)
 
 while True:
     # Reading image from camera
+    t_start = time.time()
     ret, img = cap.read()
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -154,13 +157,14 @@ while True:
 
     for m in models:
         # Detect object
+        t_start_dope = time.time()
         results = ObjectDetector.detect_object_in_image(
             models[m].net,
             pnp_solvers[m],
             img,
             config_detect
         )
-
+        t_end_dope = time.time()
         # Overlay cube on image
         for i_r, result in enumerate(results):
             if result["location"] is None:
@@ -180,4 +184,7 @@ while True:
 
 
     cv2.imshow('Open_cv_image', open_cv_image)
-    cv2.waitKey(1)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+    t_end = time.time()
+    print('Overall FPS: {}, DOPE fps: {}'.format(1 / (t_end - t_start), 1 / (t_end_dope - t_start_dope)))

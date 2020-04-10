@@ -56,6 +56,7 @@ import os
 import warnings
 from dope_utilities import *
 from networks import *
+import sys
 
 warnings.filterwarnings("ignore")
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
@@ -175,6 +176,10 @@ parser.add_argument('--nbupdates',
 parser.add_argument('--datasize',
                     default=None,
                     help='randomly sample that number of entries in the dataset folder')
+
+parser.add_argument('--network',
+                    default="ResPose",
+                    help='choose either "DOPE" or "ResPose" to train. name outf, namefile accordingly')
 
 # Read the config but do not overwrite the args written
 args, remaining_argv = conf_parser.parse_known_args()
@@ -304,8 +309,15 @@ print('load models')
 
 device = torch.device("cuda:" + str(opt.gpuids[0]))
 print('device: ', device.index)
-# net = DopeNetwork(pretrained=opt.pretrained)
-net = ResPoseNetwork(pretrained=opt.pretrained)
+if opt.network=="DOPE":
+    net = DopeNetwork(pretrained=opt.pretrained)
+elif opt.network == "ResPose":
+    net = ResPoseNetwork(pretrained=opt.pretrained)
+else:
+    sys.exit("Select network from 'DOPE' or 'ResPose' to train")
+
+
+
 # net = torch.nn.DataParallel(net, device_ids=opt.gpuids) # commenting it out as onnx doesn't work with parallel
 net = net.to(device)
 print(net)

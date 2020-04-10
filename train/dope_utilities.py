@@ -124,6 +124,10 @@ def loadimages(root):
             if exists(imgpath) and exists(imgpath.replace('png', "json")):
                 imgs.append((imgpath, imgpath.replace(path, "").replace("/", ""),
                              imgpath.replace('png', "json")))
+        for imgpath in glob.glob(path + "/*.jpg"):
+            if exists(imgpath) and exists(imgpath.replace('jpg', "json")):
+                imgs.append((imgpath, imgpath.replace(path, "").replace("/", ""),
+                             imgpath.replace('jpg', "json")))
 
     def explore(path):
         if not os.path.isdir(path):
@@ -184,9 +188,10 @@ class MultipleVertexJson(data.Dataset):
             '''Recursively load the data.  This is useful to load all of the FAT dataset.'''
             imgs = loadimages(path)
 
+            # Commented out otherwise images read from subfolders twice.
             # Check all the folders in path
-            for name in os.listdir(str(path)):
-                imgs += loadimages(path + "/" + name)
+            # for name in os.listdir(str(path)):
+            #     imgs += loadimages(path + "/" + name)
             return imgs
 
         self.imgs = load_data(root)

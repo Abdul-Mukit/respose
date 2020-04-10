@@ -81,7 +81,7 @@ conf_parser.add_argument("-c", "--config",
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data',
-                    default="Datasets/noBlood_randColor",
+                    default="Datasets/noBlood_randColor/train",
                     help='path to training data')
 
 parser.add_argument('--datatest',
@@ -173,7 +173,7 @@ parser.add_argument('--nbupdates',
     otherwise uses the number of epochs')
 
 parser.add_argument('--datasize',
-                    default=64,
+                    default=None,
                     help='randomly sample that number of entries in the dataset folder')
 
 # Read the config but do not overwrite the args written

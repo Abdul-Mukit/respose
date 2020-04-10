@@ -32,12 +32,6 @@ from networks import *
 # Import the definition of the neural network model and cuboids
 from cuboid_pnp_solver import *
 
-
-# Global selection of cuda device
-# cuda0 = torch.device('cuda:0')
-# cuda1 = torch.device('cuda:1')
-# selected_device = cuda1 # TODO: make gpu selection controlable from other file.
-
 #global transform for image input
 transform = transforms.Compose([
     # transforms.Scale(IMAGE_SIZE),
@@ -75,7 +69,6 @@ class ModelData(object):
         model_loading_start_time = time.time()
         print("Loading DOPE model '{}'...".format(path))
         device = torch.device("cuda:" + str(self.gpu_id))
-        # device = selected_device # TODO: (Attempted) make gpu selection controlable from other file.
         net = ResPoseNetwork()
         net = net.to(device)  # For model not trained with dataparallel
         net.load_state_dict(torch.load(path))
@@ -122,7 +115,7 @@ class ObjectDetector(object):
         # Run network inference
         image_tensor = transform(in_img)
         device = torch.device("cuda:" + str(gpu_id))
-        image_torch = Variable(image_tensor).to(device).unsqueeze(0) ## TODO: make gpu selection controlable from other file.
+        image_torch = Variable(image_tensor).to(device).unsqueeze(0)
         out, seg = net_model(image_torch)
         vertex2 = out[-1][0]
         aff = seg[-1][0]

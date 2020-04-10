@@ -5,12 +5,13 @@ weights: {
     # "cracker":"cracker_60.pth",
     # "gelatin":"gelatin_60.pth",
 #     "meat":"meat_20.pth"
+     "meat":"net_rp_meat_v1_30.pth"
     # "mustard":"mustard_60.pth",
     # "soup":"soup_60.pth",
     #"sugar":"sugar_60.pth",
     #"cautery":"net_epoch_217.pth" # The 48 hour model
 #    "cautery":"cautery_s6_60.pth"
-     "cautery_hand":"net_respose_1.pth"
+#     "cautery_hand":"net_rp_v1_20.pth"
 #     "cautery_hand":"net_machineTest_2.pth"
 #     "face":"net_face_60.pth"
 }

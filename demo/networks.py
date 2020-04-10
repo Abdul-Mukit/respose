@@ -166,6 +166,7 @@ class ResPoseNetwork(nn.Module):
 class DopeNetwork(nn.Module):
     def __init__(
             self,
+            pretrained=False,
             numBeliefMap=9,
             numAffinity=16,
             stop_at_stage=6  # number of stages to process (if less than total number of stages)

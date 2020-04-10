@@ -16,25 +16,27 @@ import traceback
 from os import path
 import threading
 from threading import Thread
-
 import numpy as np
 import cv2
-
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 import torchvision.models as models
-
 from scipy import ndimage
 import scipy
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
 from scipy.ndimage.filters import gaussian_filter
 from networks import *
-
 # Import the definition of the neural network model and cuboids
 from cuboid_pnp_solver import *
+
+
+# Global selection of cuda device
+cuda0 = torch.device('cuda:0')
+cuda1 = torch.device('cuda:1')
+selected_device = cuda1 # TODO: make gpu selection controlable from other file.
 
 #global transform for image input
 transform = transforms.Compose([
@@ -43,7 +45,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
-
 
 class ModelData(object):
     '''This class contains methods for loading the neural network'''
@@ -73,7 +74,8 @@ class ModelData(object):
         '''Loads network model from disk with given path'''
         model_loading_start_time = time.time()
         print("Loading DOPE model '{}'...".format(path))
-        device = torch.device("cuda:0")
+        # device = torch.device("cuda:0")
+        device = selected_device # TODO: make gpu selection controlable from other file.
         net = ResPoseNetwork()
         net = net.to(device)  # For model not trained with dataparallel
         net.load_state_dict(torch.load(path))
@@ -119,7 +121,8 @@ class ObjectDetector(object):
 
         # Run network inference
         image_tensor = transform(in_img)
-        image_torch = Variable(image_tensor).cuda().unsqueeze(0)
+        device = selected_device
+        image_torch = Variable(image_tensor).to(device).unsqueeze(0) ## TODO: make gpu selection controlable from other file.
         out, seg = net_model(image_torch)
         vertex2 = out[-1][0]
         aff = seg[-1][0]

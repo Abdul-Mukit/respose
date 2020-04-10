@@ -73,6 +73,7 @@ def DrawCube(points, color=(255, 0, 0)):
 
 # Settings
 cuda_device = 1
+network = "DOPE"
 config_name = "my_config_webcam.yaml"
 exposure_val = 166
 
@@ -120,7 +121,8 @@ with open(yaml_path, 'r') as stream:
         models[model] = \
             ModelData(model,
                       "weights/" + params['weights'][model],
-                      cuda_device
+                      cuda_device,
+                      'DOPE'
                       )
         models[model].load_net_model()
 

@@ -43,11 +43,12 @@ transform = transforms.Compose([
 class ModelData(object):
     '''This class contains methods for loading the neural network'''
 
-    def __init__(self, name="", net_path="", gpu_id=0):
+    def __init__(self, name="", net_path="", gpu_id=0, network="ResPose"):
         self.name = name
         self.net_path = net_path  # Path to trained network model
         self.net = None  # Trained network
         self.gpu_id = gpu_id
+        self.network = network
 
     def get_net(self):
         '''Returns network'''
@@ -69,7 +70,10 @@ class ModelData(object):
         model_loading_start_time = time.time()
         print("Loading DOPE model '{}'...".format(path))
         device = torch.device("cuda:" + str(self.gpu_id))
-        net = ResPoseNetwork()
+        if self.network == "DOPE": # TODO: Check whether network selection works
+            net = DopeNetwork();
+        elif self.netork == "ResPose":
+            net = ResPoseNetwork()
         net = net.to(device)  # For model not trained with dataparallel
         net.load_state_dict(torch.load(path))
         net.eval()

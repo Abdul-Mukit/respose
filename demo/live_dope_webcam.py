@@ -72,6 +72,7 @@ def DrawCube(points, color=(255, 0, 0)):
 
 
 # Settings
+cuda_device = 1
 config_name = "my_config_webcam.yaml"
 exposure_val = 166
 
@@ -117,10 +118,10 @@ with open(yaml_path, 'r') as stream:
     # For each object to detect, load network model, create PNP solver, and start ROS publishers
     for model in params['weights']:
         models[model] = \
-            ModelData(
-                model,
-                "weights/" + params['weights'][model]
-            )
+            ModelData(model,
+                      "weights/" + params['weights'][model],
+                      cuda_device
+                      )
         models[model].load_net_model()
 
         draw_colors[model] = tuple(params["draw_colors"][model])
@@ -132,15 +133,6 @@ with open(yaml_path, 'r') as stream:
                 Cuboid3d(params['dimensions'][model]),
                 dist_coeffs=dist_coeffs
             )
-
-# RealSense Start
-# pipeline = rs.pipeline()
-# config = rs.config()
-# config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-# profile = pipeline.start(config)
-# # Setting exposure
-# s = profile.get_device().query_sensors()[1]
-# s.set_option(rs.option.exposure, exposure_val)
 
 cap = cv2.VideoCapture(0)
 
@@ -162,7 +154,8 @@ while True:
             models[m].net,
             pnp_solvers[m],
             img,
-            config_detect
+            config_detect,
+            cuda_device
         )
         t_end_dope = time.time()
         # Overlay cube on image

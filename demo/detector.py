@@ -34,9 +34,9 @@ from cuboid_pnp_solver import *
 
 
 # Global selection of cuda device
-cuda0 = torch.device('cuda:0')
-cuda1 = torch.device('cuda:1')
-selected_device = cuda1 # TODO: make gpu selection controlable from other file.
+# cuda0 = torch.device('cuda:0')
+# cuda1 = torch.device('cuda:1')
+# selected_device = cuda1 # TODO: make gpu selection controlable from other file.
 
 #global transform for image input
 transform = transforms.Compose([
@@ -74,8 +74,8 @@ class ModelData(object):
         '''Loads network model from disk with given path'''
         model_loading_start_time = time.time()
         print("Loading DOPE model '{}'...".format(path))
-        # device = torch.device("cuda:0")
-        device = selected_device # TODO: make gpu selection controlable from other file.
+        device = torch.device("cuda:" + str(self.gpu_id))
+        # device = selected_device # TODO: (Attempted) make gpu selection controlable from other file.
         net = ResPoseNetwork()
         net = net.to(device)  # For model not trained with dataparallel
         net.load_state_dict(torch.load(path))
@@ -113,7 +113,7 @@ class ObjectDetector(object):
     '''This class contains methods for object detection'''
 
     @staticmethod
-    def detect_object_in_image(net_model, pnp_solver, in_img, config):
+    def detect_object_in_image(net_model, pnp_solver, in_img, config, gpu_id=0):
         '''Detect objects in a image using a specific trained network model'''
 
         if in_img is None:
@@ -121,7 +121,7 @@ class ObjectDetector(object):
 
         # Run network inference
         image_tensor = transform(in_img)
-        device = selected_device
+        device = torch.device("cuda:" + str(gpu_id))
         image_torch = Variable(image_tensor).to(device).unsqueeze(0) ## TODO: make gpu selection controlable from other file.
         out, seg = net_model(image_torch)
         vertex2 = out[-1][0]

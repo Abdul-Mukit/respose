@@ -5,3 +5,5 @@ python train_1gpu.py --data /home/mukit/NDDS/Exported_Data/cautery_hand/train/no
 
 # Respose
  python train_1gpu_respose.py --data Datasets/noBlood_randColor/train/ --datatest Datasets/noBlood_randColor/test/ --batchsize 32 --outf rp_v1 --namefile rp_v1 --epochs 60 --network ResPose
+ 
+python train_1gpu_respose.py --data ~/Datasets/fat/ --batchsize 32 --outf rp_meat_v1.1 --namefile rp_meat_v1.1 --epochs 60 --network ResPose --object 010_potted_meat_can_16k --gpuids 1

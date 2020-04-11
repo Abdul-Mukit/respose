@@ -82,7 +82,7 @@ conf_parser.add_argument("-c", "--config",
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--data',
-                    default="Datasets/noBlood_randColor/train",
+                    default="Dataset/dev_batch",
                     help='path to training data')
 
 parser.add_argument('--datatest',
@@ -100,7 +100,7 @@ parser.add_argument('--workers',
 
 parser.add_argument('--batchsize',
                     type=int,
-                    default=32,
+                    default=16,
                     help='input batch size')
 
 parser.add_argument('--batchsizetest',
@@ -137,7 +137,7 @@ parser.add_argument('--manualseed',
 
 parser.add_argument('--epochs',
                     type=int,
-                    default=2,
+                    default=1,
                     help="number of epochs to train")
 
 parser.add_argument('--loginterval',

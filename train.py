@@ -194,6 +194,9 @@ parser.set_defaults(**defaults)
 parser.add_argument("--option")
 opt = parser.parse_args(remaining_argv)
 
+if opt.pretrained in ['false', 'False']:
+    opt.pretrained = False
+
 opt.outf = w_fname + opt.outf
 
 try:

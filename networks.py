@@ -16,11 +16,18 @@ class ResPoseNetwork(nn.Module):
     ):
         super(ResPoseNetwork, self).__init__()
 
-        self.stop_at_stage = stop_at_stage
+        self.pretrained = pretrained
         self.numBeliefMap = numBeliefMap
         self.numAffinity = numAffinity
+        self.stop_at_stage = stop_at_stage
 
-        vgg_full = models.vgg19(pretrained=False).features
+        if pretrained is False:
+            print("Training network without imagenet weights.")
+        else:
+            print("Training network pretrained on imagenet.")
+
+        vgg_full = models.vgg19(pretrained=pretrained, progress=True).features
+
         self.vgg = nn.Sequential()
         for i_layer in range(24):
             self.vgg.add_module(str(i_layer), vgg_full[i_layer])
@@ -173,9 +180,17 @@ class DopeNetwork(nn.Module):
     ):
         super(DopeNetwork, self).__init__()
 
+        self.pretrained = pretrained
+        self.numBeliefMap = numBeliefMap
+        self.numAffinity = numAffinity
         self.stop_at_stage = stop_at_stage
 
-        vgg_full = models.vgg19(pretrained=False).features
+        if pretrained is False:
+            print("Training network without imagenet weights.")
+        else:
+            print("Training network pretrained on imagenet.")
+
+        vgg_full = models.vgg19(pretrained=pretrained, progress=True).features
         self.vgg = nn.Sequential()
         for i_layer in range(24):
             self.vgg.add_module(str(i_layer), vgg_full[i_layer])

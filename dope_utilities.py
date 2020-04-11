@@ -197,7 +197,7 @@ class MultipleVertexJson(data.Dataset):
         self.imgs = load_data(root)
 
         # Shuffle the data, this is useful when we want to use a subset.
-        np.random.shuffle(self.imgs)
+        np.random.shuffle(self.imgs) # TODO: Need to remove random shuffle if apply feedback or RNN in future
 
     def __len__(self):
         # When limiting the number of data

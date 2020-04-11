@@ -72,7 +72,7 @@ class ModelData(object):
         device = torch.device("cuda:" + str(self.gpu_id))
         if self.network == "DOPE": # TODO: Check whether network selection works
             net = DopeNetwork();
-        elif self.netork == "ResPose":
+        elif self.network == "ResPose":
             net = ResPoseNetwork()
         net = net.to(device)  # For model not trained with dataparallel
         net.load_state_dict(torch.load(path))

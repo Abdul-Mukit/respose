@@ -60,7 +60,7 @@ import sys
 
 warnings.filterwarnings("ignore")
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
-
+w_fname = 'weights/' # Folder to save weights in
 
 
 ##################################################
@@ -128,7 +128,7 @@ parser.add_argument('--net',
                     help="path to net (to continue training)")
 
 parser.add_argument('--namefile',
-                    default='respose',
+                    default='epoch',
                     help="name to put on the file of the save weights")
 
 parser.add_argument('--manualseed',
@@ -194,8 +194,7 @@ parser.set_defaults(**defaults)
 parser.add_argument("--option")
 opt = parser.parse_args(remaining_argv)
 
-if not "/" in opt.outf:
-    opt.outf = "train_{}".format(opt.outf)
+opt.outf = w_fname + opt.outf
 
 try:
     os.makedirs(opt.outf)
@@ -272,9 +271,7 @@ if opt.save:
             normal_imgs = [0, 1]
         save_image(images['img'], '{}/train_{}.png'.format(opt.outf, str(i).zfill(5)), mean=normal_imgs[0],
                    std=normal_imgs[1])
-
         print(i)
-
     print('things are saved in {}'.format(opt.outf))
     quit()
 
@@ -306,7 +303,6 @@ if not testingdata is None:
     print("testing data: {} batches".format(len(testingdata)))
 print('load models')
 
-
 device = torch.device("cuda:" + str(opt.gpuids[0]))
 print('device: ', device.index)
 if opt.network=="DOPE":
@@ -316,17 +312,8 @@ elif opt.network == "ResPose":
 else:
     sys.exit("Select network from 'DOPE' or 'ResPose' to train")
 
-
-
-# net = torch.nn.DataParallel(net, device_ids=opt.gpuids) # commenting it out as onnx doesn't work with parallel
 net = net.to(device)
 print(net)
-
-
-# exit(0)
-
-# net = torch.nn.DataParallel(net, device_ids=opt.gpuids).cuda(1)
-# net = torch.nn.DataParallel(net, device_ids=opt.gpuids).cuda(1)
 
 if opt.net != '':
     net.load_state_dict(torch.load(opt.net))

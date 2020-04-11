@@ -1,82 +1,12 @@
-import numpy as np
-from cuboid import *
 from detector import *
 import yaml
-
-import pyrealsense2 as rs
-
-from PIL import Image
-from PIL import ImageDraw
 import time
-
-
-
-### Code to visualize the neural network output
-
-def DrawLine(point1, point2, lineColor, lineWidth):
-    '''Draws line on image'''
-    global g_draw
-    if not point1 is None and point2 is not None:
-        g_draw.line([point1, point2], fill=lineColor, width=lineWidth)
-
-
-def DrawDot(point, pointColor, pointRadius):
-    '''Draws dot (filled circle) on image'''
-    global g_draw
-    if point is not None:
-        xy = [
-            point[0] - pointRadius,
-            point[1] - pointRadius,
-            point[0] + pointRadius,
-            point[1] + pointRadius
-        ]
-        g_draw.ellipse(xy,
-                       fill=pointColor,
-                       outline=pointColor
-                       )
-
-
-def DrawCube(points, color=(255, 0, 0)):
-    '''
-    Draws cube with a thick solid line across
-    the front top edge and an X on the top face.
-    '''
-
-    lineWidthForDrawing = 2
-
-    # draw front
-    DrawLine(points[0], points[1], color, lineWidthForDrawing)
-    DrawLine(points[1], points[2], color, lineWidthForDrawing)
-    DrawLine(points[3], points[2], color, lineWidthForDrawing)
-    DrawLine(points[3], points[0], color, lineWidthForDrawing)
-
-    # draw back
-    DrawLine(points[4], points[5], color, lineWidthForDrawing)
-    DrawLine(points[6], points[5], color, lineWidthForDrawing)
-    DrawLine(points[6], points[7], color, lineWidthForDrawing)
-    DrawLine(points[4], points[7], color, lineWidthForDrawing)
-
-    # draw sides
-    DrawLine(points[0], points[4], color, lineWidthForDrawing)
-    DrawLine(points[7], points[3], color, lineWidthForDrawing)
-    DrawLine(points[5], points[1], color, lineWidthForDrawing)
-    DrawLine(points[2], points[6], color, lineWidthForDrawing)
-
-    # draw dots
-    DrawDot(points[0], pointColor=color, pointRadius=4)
-    DrawDot(points[1], pointColor=color, pointRadius=4)
-
-    # draw x on the top
-    DrawLine(points[0], points[5], color, lineWidthForDrawing)
-    DrawLine(points[1], points[4], color, lineWidthForDrawing)
-
+from dope_utilities import *
 
 # Settings
-cuda_device = 1
-network = "DOPE"
+cuda_device = 0 # device to run demo on
+network = "DOPE" # Select between "DOPE" and "ResPose" to run.
 config_name = "my_config_webcam.yaml"
-exposure_val = 166
-
 
 yaml_path = 'cfg/{}'.format(config_name)
 with open(yaml_path, 'r') as stream:
@@ -86,7 +16,6 @@ with open(yaml_path, 'r') as stream:
         print('    Parameters loaded.')
     except yaml.YAMLError as exc:
         print(exc)
-
 
     models = {}
     pnp_solvers = {}
@@ -114,7 +43,6 @@ with open(yaml_path, 'r') as stream:
     config_detect.thresh_map = params['thresh_map']
     config_detect.sigma = params['sigma']
     config_detect.thresh_points = params["thresh_points"]
-
 
     # For each object to detect, load network model, create PNP solver, and start ROS publishers
     for model in params['weights']:
@@ -176,7 +104,6 @@ while True:
 
     open_cv_image = np.array(im)
     open_cv_image = cv2.cvtColor(open_cv_image, cv2.COLOR_RGB2BGR)
-
 
     cv2.imshow('Open_cv_image', open_cv_image)
     if cv2.waitKey(1) & 0xFF == ord('q'):

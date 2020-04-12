@@ -68,54 +68,41 @@ class ResPoseNetwork(nn.Module):
         # out1_1 = self.m1_1(in1)
 
         if self.stop_at_stage == 1:
-            return [out1[:, :numBeliefMap, :, :]], \
-                   [out1[:, :numAffinity, :, :]] #TODO: correct bug in feature map slicing
+            return [out1]
 
         in2 = torch.cat([out1, in1], 1)
         out2 = self.cas2(in2)
         # out2_1 = self.m2_1(in2)
 
         if self.stop_at_stage == 2:
-            return [out1[:, :numBeliefMap, :, :], out2[:, :numBeliefMap, :, :]], \
-                   [out1[:, :numAffinity, :, :], out2[:, :numAffinity, :, :]]
+            return [out1, out2]
 
         in3 = torch.cat([out2, in1], 1)
         out3 = self.cas3(in3)
         # out3_1 = self.m3_1(in3)
 
         if self.stop_at_stage == 3:
-            return [out1[:, :numBeliefMap, :, :], out2[:, :numBeliefMap, :, :], out3[:, :numBeliefMap, :, :]], \
-                   [out1[:, :numAffinity, :, :], out2[:, :numAffinity, :, :], out3[:, :numAffinity, :, :]]
+            return [out1, out2, out3]
 
         in4 = torch.cat([out3, in1], 1)
         out4 = self.cas4(in4)
         # out4_1 = self.m4_1(in4)
 
         if self.stop_at_stage == 4:
-            return [out1[:, :numBeliefMap, :, :], out2[:, :numBeliefMap, :, :], out3[:, :numBeliefMap, :, :],
-                    out4[:, :numBeliefMap, :, :]], \
-                   [out1[:, :numAffinity, :, :], out2[:, :numAffinity, :, :], out3[:, :numAffinity, :, :],
-                    out4[:, :numAffinity, :, :]]
+            return [out1, out2, out3, out4]
 
         in5 = torch.cat([out4, in1], 1)
         out5 = self.cas5(in5)
         # out5_1 = self.m5_1(in5)
 
         if self.stop_at_stage == 5:
-            return [out1[:, :numBeliefMap, :, :], out2[:, :numBeliefMap, :, :], out3[:, :numBeliefMap, :, :],
-                    out4[:, :numBeliefMap, :, :], out5[:, :numBeliefMap, :, :]], \
-                   [out1[:, :numAffinity, :, :], out2[:, :numAffinity, :, :], out3[:, :numAffinity, :, :],
-                    out4[:, :numAffinity, :, :], out5[:, :numAffinity, :, :]]
+            return [out1, out2, out3, out4, out5]
 
         in6 = torch.cat([out5, in1], 1)
         out6 = self.cas6(in6)
         # out6_1 = self.m6_1(in6)
 
-        return [out1[:, :numBeliefMap, :, :], out2[:, :numBeliefMap, :, :], out3[:, :numBeliefMap, :, :],
-                out4[:, :numBeliefMap, :, :], out5[:, :numBeliefMap, :, :], out6[:, :numBeliefMap, :, :]], \
-               [out1[:, :numAffinity, :, :], out2[:, :numAffinity, :, :], out3[:, :numAffinity, :, :],
-                out4[:, :numAffinity, :, :], out5[:, :numAffinity, :, :], out6[:, :numAffinity, :, :]]
-        #TODO: return ouput as [out1, out2, out3, ...] then create a function that does this redistribution.
+        return [out1, out2, out3, out4, out5, out6]
 
     @staticmethod
     def create_stage(in_channels, out_channels, first=False):

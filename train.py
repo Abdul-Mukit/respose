@@ -345,7 +345,16 @@ def _runnetwork(epoch, loader, train=True):
 
         data = Variable(targets['img'].cuda(opt.gpuids[0]))
 
-        output_belief, output_affinities = net(data)
+        if opt.network == "DOPE":
+            output_belief, output_affinities = net(data)
+        elif opt.network == "ResPose":
+            output_belief, output_affinities = reshape_maps(net(data))  # shape of mapList is different from DOPE's
+
+        # TODO: Remove debug prints for ouput-map shapes
+        # print(f"output_belief len: {len(output_belief)}")
+        # print(f"output_affinities len: {len(output_affinities)}")
+        # print(f"output_belief[0] shape: {output_belief[0].shape}")
+        # print(f"outAffinityList[0] shape: {output_affinities[0].shape}")
 
         if train:
             optimizer.zero_grad()

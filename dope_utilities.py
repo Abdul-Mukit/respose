@@ -30,6 +30,34 @@ import torch.nn.functional as F
 import shutil
 import os
 
+##################################################
+# UTILS for reshaping ResPose's map outputs
+##################################################
+
+def reshape_maps(InputList):
+    """
+    :param InputList: varyable list from forward pass of ResPose
+    InputList example for 6th stage output without multiclass has length 6 with each element having size
+    (numbBatch, 25, W/8, H/8), where W and H are network-input-image dimensions (for dope 400x400)
+
+    Future: Later each list element of the list may have size   (numbBatch, (numbClass x 25), W/8, H/8)
+    where numbClass != 1
+    When this condition is true the function will behave differently
+
+    :return:
+    beliefList: List of Belief maps generated at different stages. Each element will have shape:
+    (numbBatch, 9, W/8, H/8). The top 9 maps of each out
+    affinityList: List of Affinity maps generated at different stages. Each element will have shape:
+    (numbBatch, 16, W/8, H/8). The bottom 16 maps of each out
+    """
+    beliefList = []
+    affinityList = []
+    numBeliefMap = 9
+    for out in InputList:
+        beliefList.append(out[:, :numBeliefMap, :, :])
+        affinityList.append(out[:, numBeliefMap:, :, :])
+    return beliefList, affinityList
+
 
 ##################################################
 # UTILS CODE FOR LOADING THE DATA

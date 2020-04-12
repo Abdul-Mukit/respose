@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torchvision.transforms as transforms
 
+import matplotlib.pyplot as plt
 from PIL import Image
 from PIL import ImageFilter
 from PIL import ImageOps
@@ -82,6 +83,90 @@ def get_truth_maps(data_path, index=0, sigma=8):
     affinities = GenerateMapAffinity(img, 8, pointsBelief, objects_centroid, scale=1)
     img = np.array(img)
     return img, beliefsImg, affinities
+
+##################################################
+# UTILS for visualizing belief maps for dugging in iPython Notebooks
+##################################################
+
+# Function for visualizing feature maps
+def create_belief_mask(map, threshold=0.9):
+    map -= map.min()
+    map = map / map.max()
+    map[map >= threshold] = 1
+    map[map < threshold] = 0
+    return map
+
+
+def viz_belief_maps(activations, in_img):
+    """
+    Given Activations, this will plot belief maps on the left and overlaid image on the right column
+    """
+    fig, ax = plt.subplots(nrows=9, ncols=2, sharex=True, figsize=(20, 50))
+    red = [255, 0, 0]
+    for i, map in enumerate(activations):
+        # Create mask out of the belief map
+        map = create_belief_mask(map)
+
+        overlaid_img = in_img.copy()
+        overlaid_img[map == 1, :] = red  # Paint red
+
+        # Display Thresholded Belief Maps
+        ax[i, 0].imshow(map, cmap='gray')
+        ax[i, 0].set_title('Belief %s' % str(i))
+
+        # Display overlayed output image
+        ax[i, 1].imshow(overlaid_img)
+        ax[i, 1].set_title('Overlaid %s' % str(i))
+
+
+def compare_belief_maps(beliefsImg, activations_dope, activations_rp, in_img):
+    """
+    Given Ground Truth, dope and ResPose beliefs, this will plot the top-90% thresholded and original
+    image overlaid locations of predicted verticies.
+    """
+    red = [255, 0, 0]
+    height, width = 480,640
+    fig, ax = plt.subplots(nrows=9, ncols=3, sharex=True, figsize=(20, 50))
+
+    for i, map in enumerate(beliefsImg):
+        map = np.array(map)  # Converting PIL-Image object to Numpy
+        map = cv2.cvtColor(map, cv2.COLOR_RGBA2GRAY)
+        map = cv2.resize(map, (width, height))
+
+        # Create mask out of the belief map
+        map = create_belief_mask(map)
+
+        overlaid_img = in_img.copy()
+        overlaid_img[map == 1, :] = red  # Paint red
+
+        # Display overlayed output image
+        ax[i, 0].imshow(overlaid_img)
+        ax[i, 0].set_title(f'Ground Truth Belief {i}')
+
+    for i, map in enumerate(activations_dope):
+        # Create mask out of the belief map
+        map = cv2.resize(map.detach().numpy(), (width, height))
+        map = create_belief_mask(map)
+
+
+        overlaid_img = in_img.copy()
+        overlaid_img[map == 1, :] = red  # Paint red
+
+        # Display overlayed output image
+        ax[i, 1].imshow(overlaid_img)
+        ax[i, 1].set_title(f'DOPE Belief {i}')
+
+    for i, map in enumerate(activations_rp):
+        # Create mask out of the belief map
+        map = cv2.resize(map.detach().numpy(), (width, height))
+        map = create_belief_mask(map)
+
+        overlaid_img = in_img.copy()
+        overlaid_img[map == 1, :] = red  # Paint red
+
+        # Display overlayed output image
+        ax[i, 2].imshow(overlaid_img)
+        ax[i, 2].set_title(f'ResPose Belief {i}')
 
 ##################################################
 # UTILS CODE FOR LOADING THE DATA

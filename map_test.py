@@ -29,8 +29,23 @@ def get_truth_maps(data_path, index, sigma=8):
 path = "Dataset/dev_batch/"
 i = 1
 img, beliefsImg, affinities = get_truth_maps(path, i)
-bImg = np.array(beliefsImg[0])
-plt.imshow(img)
-# plt.imshow(bImg)
-plt.show()
-print("hoasi")
+map = np.array(beliefsImg[0])
+
+map = cv2.cvtColor(map, cv2.COLOR_RGBA2GRAY)
+print(map.shape)
+
+
+# Create mask out of the belief map
+threshold = 0.9
+map -= map.min()
+map = map/map.max()
+# map = map.data.numpy()
+map = cv2.resize(map, (height,width))
+map[map>=threshold] = 1
+map[map<threshold] = 0
+
+
+# plt.imshow(img)
+# # plt.imshow(bImg)
+# plt.show()
+# print("hoasi")

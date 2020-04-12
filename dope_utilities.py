@@ -401,7 +401,7 @@ class MultipleVertexJson(data.Dataset):
             }
 
         # Create the belief map
-        beliefsImg = CreateBeliefMap(
+        beliefsImg = CreateBeliefMap( #TODO: Investigate generating belief maps
             img,
             pointsBelief=pointsBelief,
             nbpoints=9,

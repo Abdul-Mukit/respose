@@ -23,10 +23,13 @@ class ResPoseNetwork(nn.Module):
 
         if pretrained is False:
             print("Training network without imagenet weights.")
+            vgg_full = models.vgg19(pretrained=False).features
         else:
             print("Training network pretrained on imagenet.")
-
-        vgg_full = models.vgg19(pretrained=pretrained, progress=True).features
+            vgg_full = models.vgg19(pretrained=False)
+            vgg_full.load_state_dict(torch.load("weights/vgg19-dcbb9e9d.pth"))
+            print('Loading vgg pretrained weights from : ' + "weights/vgg19-dcbb9e9d.pth")
+            vgg_full = vgg_full.features
 
         self.vgg = nn.Sequential()
         for i_layer in range(24):
@@ -66,7 +69,7 @@ class ResPoseNetwork(nn.Module):
 
         if self.stop_at_stage == 1:
             return [out1[:, :numBeliefMap, :, :]], \
-                   [out1[:, :numAffinity, :, :]]
+                   [out1[:, :numAffinity, :, :]] #TODO: correct bug in feature map slicing
 
         in2 = torch.cat([out1, in1], 1)
         out2 = self.cas2(in2)
@@ -187,10 +190,14 @@ class DopeNetwork(nn.Module):
 
         if pretrained is False:
             print("Training network without imagenet weights.")
+            vgg_full = models.vgg19(pretrained=False).features
         else:
             print("Training network pretrained on imagenet.")
+            vgg_full = models.vgg19(pretrained=False)
+            vgg_full.load_state_dict(torch.load("weights/vgg19-dcbb9e9d.pth"))
+            print('Loading vgg pretrained weights from : ' + "weights/vgg19-dcbb9e9d.pth")
+            vgg_full = vgg_full.features
 
-        vgg_full = models.vgg19(pretrained=pretrained, progress=True).features
         self.vgg = nn.Sequential()
         for i_layer in range(24):
             self.vgg.add_module(str(i_layer), vgg_full[i_layer])

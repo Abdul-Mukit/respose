@@ -57,6 +57,7 @@ import warnings
 from dope_utilities import *
 from networks import *
 import sys
+import re
 
 warnings.filterwarnings("ignore")
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
@@ -105,7 +106,7 @@ parser.add_argument('--batchsize',
 
 parser.add_argument('--batchsizetest',
                     type=int,
-                    default=16,
+                    default=8,
                     help='input batch size')
 
 parser.add_argument('--imagesize',
@@ -320,15 +321,20 @@ print(net)
 
 if opt.net != '':
     net.load_state_dict(torch.load(opt.net))
+    last_epoch = int(re.search('net_(.*)_(.*).pth', opt.net).group(2))
+    print('Starting training from epoch: {}\n'.format(last_epoch+1))
+else:
+    last_epoch = 0 # Start from Epoch 1 as this is a new training
+
 
 parameters = filter(lambda p: p.requires_grad, net.parameters())
 optimizer = optim.Adam(parameters, lr=opt.lr)
 
-with open(opt.outf + '/loss_train.csv', 'w') as file:
-    file.write('epoch,batchid,loss\n')
-
-with open(opt.outf + '/loss_test.csv', 'w') as file:
-    file.write('epoch,batchid,loss\n')
+if opt.net == '':  # if this is a new training write titles in loss_*.csv files
+    with open(opt.outf + '/loss_train.csv', 'w') as file:
+        file.write('epoch,batchid,loss\n')
+    with open(opt.outf + '/loss_test.csv', 'w') as file:
+        file.write('epoch,batchid,loss\n')
 
 nb_update_network = 0
 
@@ -409,7 +415,7 @@ def _runnetwork(epoch, loader, train=True):
             break
 
 
-for epoch in range(1, opt.epochs + 1):
+for epoch in range(last_epoch + 1, opt.epochs + 1):
     start = datetime.datetime.now()
     if not trainingdata is None:
         _runnetwork(epoch, trainingdata)

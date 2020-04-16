@@ -5,7 +5,7 @@ from dope_utilities import *
 
 # Settings
 cuda_device = 0 # device to run demo on
-network = "DOPE" # Select between "DOPE" and "ResPose" to run.
+network = "ResPose" # Select between "DOPE" and "ResPose" to run.
 config_name = "my_config_webcam.yaml"
 
 yaml_path = 'cfg/{}'.format(config_name)
@@ -50,7 +50,7 @@ with open(yaml_path, 'r') as stream:
             ModelData(model,
                       "weights/" + params['weights'][model],
                       cuda_device,
-                      'DOPE'
+                      network
                       )
         models[model].load_net_model()
 
@@ -82,6 +82,7 @@ while True:
         t_start_dope = time.time()
         results = ObjectDetector.detect_object_in_image(
             models[m].net,
+            network,
             pnp_solvers[m],
             img,
             config_detect,
@@ -100,7 +101,7 @@ while True:
                 points2d = []
                 for pair in result['projected_points']:
                     points2d.append(tuple(pair))
-                DrawCube(points2d, draw_colors[m])
+                DrawCube(points2d, draw_colors[m], draw=g_draw)
 
     open_cv_image = np.array(im)
     open_cv_image = cv2.cvtColor(open_cv_image, cv2.COLOR_RGB2BGR)

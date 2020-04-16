@@ -31,6 +31,7 @@ from scipy.ndimage.filters import gaussian_filter
 from networks import *
 # Import the definition of the neural network model and cuboids
 from cuboid_pnp_solver import *
+from dope_utilities import *
 
 #global transform for image input
 transform = transforms.Compose([
@@ -71,7 +72,7 @@ class ModelData(object):
         print("Loading DOPE model '{}'...".format(path))
         device = torch.device("cuda:" + str(self.gpu_id))
         if self.network == "DOPE": # TODO: Check whether network selection works
-            net = DopeNetwork();
+            net = DopeNetwork()
         elif self.network == "ResPose":
             net = ResPoseNetwork()
         net = net.to(device)  # For model not trained with dataparallel
@@ -110,7 +111,7 @@ class ObjectDetector(object):
     '''This class contains methods for object detection'''
 
     @staticmethod
-    def detect_object_in_image(net_model, pnp_solver, in_img, config, gpu_id=0):
+    def detect_object_in_image(net_model, network, pnp_solver, in_img, config, gpu_id=0):
         '''Detect objects in a image using a specific trained network model'''
 
         if in_img is None:
@@ -120,7 +121,13 @@ class ObjectDetector(object):
         image_tensor = transform(in_img)
         device = torch.device("cuda:" + str(gpu_id))
         image_torch = Variable(image_tensor).to(device).unsqueeze(0)
-        out, seg = net_model(image_torch)
+        # out, seg = net_model(image_torch)
+
+        if network == "DOPE":
+            out, seg = net_model(image_torch)
+        elif network == "ResPose":
+            out, seg = reshape_maps(net_model(image_torch))  # shape of mapList is different from DOPE's
+
         vertex2 = out[-1][0]
         aff = seg[-1][0]
 

@@ -208,15 +208,6 @@ except OSError:
 if opt.manualseed is None:
     opt.manualseed = random.randint(1, 10000)
 
-# save the hyper parameters passed
-with open(opt.outf + '/header.txt', 'w') as file:
-    file.write(str(opt) + "\n")
-
-with open(opt.outf + '/header.txt', 'w') as file:
-    file.write(str(opt))
-    file.write("seed: " + str(opt.manualseed) + '\n')
-    with open(opt.outf + '/test_metric.csv', 'w') as file:
-        file.write("epoch, passed,total \n")
 
 # set the manual seed.
 random.seed(opt.manualseed)
@@ -319,22 +310,41 @@ else:
 net = net.to(device)
 print(net)
 
-if opt.net != '':
+is_new_training = opt.net == ''
+prev_log_exists = os.path.exists(opt.outf + '/loss_train.csv')
+print(f'New Training: {is_new_training}')
+print(f'Previous log-files exist: {prev_log_exists}')
+
+if not is_new_training and prev_log_exists:
+    sys.exit('Can not continue previous training. '
+             'Backup or delete loss_train.csv, loss_test.csv, header.txt files then try again')
+
+if is_new_training:
+    last_epoch = 0  # Start from Epoch 1 as this is a new training
+else:
     net.load_state_dict(torch.load(opt.net))
     last_epoch = int(re.search('net_(.*)_(.*).pth', opt.net).group(2))
-    print('Starting training from epoch: {}\n'.format(last_epoch+1))
-else:
-    last_epoch = 0 # Start from Epoch 1 as this is a new training
-
+    print('Starting training from epoch: {}\n'.format(last_epoch + 1))
 
 parameters = filter(lambda p: p.requires_grad, net.parameters())
 optimizer = optim.Adam(parameters, lr=opt.lr)
 
-if opt.net == '':  # if this is a new training write titles in loss_*.csv files
+if is_new_training:  # truncate exist
+    # ing file then write title words
     with open(opt.outf + '/loss_train.csv', 'w') as file:
         file.write('epoch,batchid,loss\n')
     with open(opt.outf + '/loss_test.csv', 'w') as file:
         file.write('epoch,batchid,loss\n')
+
+# save the hyper parameters passed
+with open(opt.outf + '/header.txt', 'w') as file:
+    file.write(str(opt) + "\n")
+
+with open(opt.outf + '/header.txt', 'w') as file:
+    file.write(str(opt))
+    file.write("seed: " + str(opt.manualseed) + '\n')
+    with open(opt.outf + '/test_metric.csv', 'w') as file:
+        file.write("epoch, passed,total \n")
 
 nb_update_network = 0
 
@@ -393,9 +403,7 @@ def _runnetwork(epoch, loader, train=True):
             namefile = '/loss_test.csv'
 
         with open(opt.outf + namefile, 'a') as file:
-            s = '{}, {},{:.15f}\n'.format(
-                epoch, batch_idx, loss.data)
-            # print (s)
+            s = '{}, {},{:.15f}\n'.format(epoch, batch_idx, loss.data)
             file.write(s)
 
         if train:

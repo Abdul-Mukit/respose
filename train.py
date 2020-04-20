@@ -56,6 +56,7 @@ import os
 import warnings
 from dope_utilities import *
 from networks import *
+from networks_exp import *
 import sys
 import re
 
@@ -138,7 +139,7 @@ parser.add_argument('--manualseed',
 
 parser.add_argument('--epochs',
                     type=int,
-                    default=1,
+                    default=60,
                     help="number of epochs to train")
 
 parser.add_argument('--loginterval',
@@ -179,8 +180,8 @@ parser.add_argument('--datasize',
                     help='randomly sample that number of entries in the dataset folder')
 
 parser.add_argument('--network',
-                    default="ResPose",
-                    help='choose either "DOPE" or "ResPose" to train. name outf, namefile accordingly')
+                    default="ResPose2",
+                    help='choose either "DOPE", "ResPose", "ResPose2" to train. name outf, namefile accordingly')
 
 # Read the config but do not overwrite the args written
 args, remaining_argv = conf_parser.parse_known_args()
@@ -304,6 +305,8 @@ if opt.network=="DOPE":
     net = DopeNetwork(pretrained=opt.pretrained)
 elif opt.network == "ResPose":
     net = ResPoseNetwork(pretrained=opt.pretrained)
+elif opt.network == "ResPose2":
+    net = ResPoseNetwork2(pretrained=opt.pretrained)
 else:
     sys.exit("Select network from 'DOPE' or 'ResPose' to train")
 
@@ -363,7 +366,7 @@ def _runnetwork(epoch, loader, train=True):
 
         if opt.network == "DOPE":
             output_belief, output_affinities = net(data)
-        elif opt.network == "ResPose":
+        elif opt.network == "ResPose" or opt.network == "ResPose2":
             output_belief, output_affinities = reshape_maps(net(data))  # shape of mapList is different from DOPE's
 
         # TODO: Remove debug prints for ouput-map shapes

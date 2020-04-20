@@ -29,6 +29,7 @@ import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
 from scipy.ndimage.filters import gaussian_filter
 from networks import *
+from networks_exp import *
 # Import the definition of the neural network model and cuboids
 from cuboid_pnp_solver import *
 from dope_utilities import *
@@ -44,7 +45,7 @@ transform = transforms.Compose([
 class ModelData(object):
     '''This class contains methods for loading the neural network'''
 
-    def __init__(self, name="", net_path="", gpu_id=0, network="ResPose"):
+    def __init__(self, name="", net_path="", gpu_id=0, network="ResPose2"):
         self.name = name
         self.net_path = net_path  # Path to trained network model
         self.net = None  # Trained network
@@ -71,10 +72,14 @@ class ModelData(object):
         model_loading_start_time = time.time()
         print("Loading DOPE model '{}'...".format(path))
         device = torch.device("cuda:" + str(self.gpu_id))
+
         if self.network == "DOPE": # TODO: Check whether network selection works
             net = DopeNetwork()
         elif self.network == "ResPose":
             net = ResPoseNetwork()
+        elif self.network == "ResPose2":
+            net = ResPoseNetwork2()
+
         net = net.to(device)  # For model not trained with dataparallel
         net.load_state_dict(torch.load(path))
         net.eval()

@@ -119,7 +119,7 @@ def viz_belief_maps(activations, in_img):
         ax[i, 1].set_title('Overlaid %s' % str(i))
 
 
-def compare_belief_maps(beliefsImg, activations_dope, activations_rp, in_img):
+def compare_belief_maps(beliefsImg, activations_first_model, activations_second_model, in_img):
     """
     Given Ground Truth, dope and ResPose beliefs, this will plot the top-90% thresholded and original
     image overlaid locations of predicted verticies.
@@ -143,7 +143,7 @@ def compare_belief_maps(beliefsImg, activations_dope, activations_rp, in_img):
         ax[i, 0].imshow(overlaid_img)
         ax[i, 0].set_title(f'Ground Truth Belief {i}')
 
-    for i, map in enumerate(activations_dope):
+    for i, map in enumerate(activations_first_model):
         # Create mask out of the belief map
         map = cv2.resize(map.detach().numpy(), (width, height))
         map = create_belief_mask(map)
@@ -154,9 +154,9 @@ def compare_belief_maps(beliefsImg, activations_dope, activations_rp, in_img):
 
         # Display overlayed output image
         ax[i, 1].imshow(overlaid_img)
-        ax[i, 1].set_title(f'DOPE Belief {i}')
+        ax[i, 1].set_title(f'Model1 Belief {i}')
 
-    for i, map in enumerate(activations_rp):
+    for i, map in enumerate(activations_second_model):
         # Create mask out of the belief map
         map = cv2.resize(map.detach().numpy(), (width, height))
         map = create_belief_mask(map)
@@ -166,7 +166,7 @@ def compare_belief_maps(beliefsImg, activations_dope, activations_rp, in_img):
 
         # Display overlayed output image
         ax[i, 2].imshow(overlaid_img)
-        ax[i, 2].set_title(f'ResPose Belief {i}')
+        ax[i, 2].set_title(f'Model2 Belief {i}')
 
 ##################################################
 # UTILS CODE FOR LOADING THE DATA

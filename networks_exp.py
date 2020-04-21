@@ -1,14 +1,27 @@
 import torch.nn as nn
 import torchvision
-from torchvision.models.resnet import Bottleneck, conv3x3, conv1x1
+from torchvision.models.resnet import Bottleneck, conv3x3
+import torch
+from torchvision import models
 
-# Excluding the last relu, as belief and affinity maps have negative values too
+
 class BottleneckMod(Bottleneck):
-    def __init__(self, inplanes, planes):
+    '''
+    * Excluding the last relu, as belief and affinity maps have negative values too
+    * Including a relu at the beginning. As no relu at end, cascading this block creates a situation with no relu in
+    between blocks.
+    * Adding position argument to cater for the above mentioned 2 problems.
+    * postion = 'Start' only when first bottleneck of cascade-1
+    '''
+    def __init__(self, inplanes, planes, position=''):
         super(BottleneckMod, self).__init__(inplanes, planes)
+        self.position = position
 
     def forward(self, x):
         identity = x
+
+        if self.position != 'Start':
+            x = self.relu(x)  # added as no relu at the end, so when cascaded relu is always missing
 
         out = self.conv1(x)
         out = self.bn1(out)
@@ -21,55 +34,89 @@ class BottleneckMod(Bottleneck):
         out = self.conv3(out)
         out = self.bn3(out)
 
-        out += identity
-        # out = self.relu(out)
-
+        out += identity # Always non-relu output
+        # there was a relu here in original
         return out
 
-# class BottleneckMod(nn.Module):
-#     expansion = 4
-#     __constants__ = ['downsample']
-#
-#     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-#                  base_width=64, dilation=1, norm_layer=None):
-#         super(BottleneckMod, self).__init__()
-#         if norm_layer is None:
-#             norm_layer = nn.BatchNorm2d
-#         width = int(planes * (base_width / 64.)) * groups
-#         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
-#         self.relu = nn.ReLU(inplace=True)
-#         self.conv1 = conv1x1(inplanes, width)
-#         self.bn1 = norm_layer(width)
-#         self.conv2 = conv3x3(width, width, stride, groups, dilation)
-#         self.bn2 = norm_layer(width)
-#         self.conv3 = conv1x1(width, planes * self.expansion)
-#         self.bn3 = norm_layer(planes * self.expansion)
-#
-#         self.downsample = downsample
-#         self.stride = stride
-#
-#     def forward(self, x):
-#         identity = x
-#
-#         out = self.conv1(x)
-#         out = self.bn1(out)
-#         out = self.relu(out)
-#
-#         out = self.conv2(out)
-#         out = self.bn2(out)
-#         out = self.relu(out)
-#
-#         out = self.conv3(out)
-#         out = self.bn3(out)
-#
-#         if self.downsample is not None:
-#             identity = self.downsample(x)
-#
-#         out += identity
-#         # out = self.relu(out)
-#
-#         return out
 
+class ResPoseNetwork1p2(nn.Module):
+    def __init__(
+            self,
+            pretrained=False,
+            numBeliefMap=9,
+            numAffinity=16,
+            stop_at_stage=6  # number of stages to process (if less than total number of stages)
+    ):
+        super(ResPoseNetwork1p2, self).__init__()
+
+        self.pretrained = pretrained
+        self.numBeliefMap = numBeliefMap
+        self.numAffinity = numAffinity
+        self.stop_at_stage = stop_at_stage
+
+        # Including pretrained-resnet upto Layer2
+        resnet = torchvision.models.resnet50(pretrained=pretrained)
+        self.conv1 = resnet.conv1
+        self.bn1 = resnet.bn1
+        self.relu = resnet.relu
+        self.maxpool = resnet.maxpool
+        self.layer1 = resnet.layer1
+        self.layer2 = resnet.layer2
+
+        # Both Belief and Affnity calculation
+        self.cas1 = ResPoseNetwork1p2.create_stage(128,
+                                             numBeliefMap + numAffinity, True)
+        self.cas2 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
+        self.cas3 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
+        self.cas4 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
+        self.cas5 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
+        self.cas6 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+                                             numBeliefMap + numAffinity, False)
+
+    def forward(self, x):
+        '''Runs inference on the neural network'''
+        numBeliefMap = self.numBeliefMap
+        numAffinity = self.numAffinity
+
+        # Same Resnet50 upto Layer-2
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        x = self.layer1(x)
+        in1 = self.layer2(x)
+
+        out1 = self.cas1(in1)
+        if self.stop_at_stage == 1:
+            return [out1]
+
+        in2 = torch.cat([out1, in1], 1)
+        out2 = self.cas2(in2)
+        if self.stop_at_stage == 2:
+            return [out1, out2]
+
+        in3 = torch.cat([out2, in1], 1)
+        out3 = self.cas3(in3)
+        if self.stop_at_stage == 3:
+            return [out1, out2, out3]
+
+        in4 = torch.cat([out3, in1], 1)
+        out4 = self.cas4(in4)
+        if self.stop_at_stage == 4:
+            return [out1, out2, out3, out4]
+
+        in5 = torch.cat([out4, in1], 1)
+        out5 = self.cas5(in5)
+        if self.stop_at_stage == 5:
+            return [out1, out2, out3, out4, out5]
+
+        in6 = torch.cat([out5, in1], 1)
+        out6 = self.cas6(in6)
+        return [out1, out2, out3, out4, out5, out6]
 
 class ResPoseNetwork2(nn.Module):
     def __init__(self, pretrained=True, numBeliefMap=9, numAffinity=16):
@@ -91,13 +138,18 @@ class ResPoseNetwork2(nn.Module):
         self.layer2 = resnet.layer2
 
         # Defining the Cascades
-        self.cas1 = nn.Sequential(BottleneckMod(512, 128), BottleneckMod(512, 128))
+        self.cas1 = nn.Sequential(BottleneckMod(512, 128, position='Start'), BottleneckMod(512, 128))
         self.cas2 = nn.Sequential(BottleneckMod(512, 128), BottleneckMod(512, 128))
         self.cas3 = nn.Sequential(BottleneckMod(512, 128), BottleneckMod(512, 128))
         self.cas4 = nn.Sequential(BottleneckMod(512, 128), BottleneckMod(512, 128))
 
         # Defining the final Maps Layer
-        self.maps = conv3x3(512, numBeliefMap + numAffinity)
+        self.maps = nn.Sequential(nn.ReLU(inplace=True),
+                                  conv3x3(512, 256),
+                                  nn.BatchNorm2d(256),
+                                  conv3x3(256, numBeliefMap + numAffinity))
+                                  # nn.BatchNorm2d(numBeliefMap + numAffinity))
+
 
     def forward(self, x):
         '''Runs inference on the neural network'''
@@ -121,6 +173,7 @@ class ResPoseNetwork2(nn.Module):
 
         # Maps layer
         out5 = self.maps(out4)
+        # out5 += out4[:, :numOutMaps, :, :]
 
         return [out1[:, :numOutMaps, :, :],
                 out2[:, :numOutMaps, :, :],

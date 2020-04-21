@@ -185,7 +185,7 @@ parser.add_argument('--network',
                     help='choose either "DOPE", "ResPose", "ResPose2" to train. name outf, namefile accordingly')
 
 parser.add_argument('--LrSchedule',
-                    default=True,
+                    default=False,
                     help='Choose whether to use a auto LrScheduler')
 
 parser.add_argument('--featureNet',
@@ -207,6 +207,10 @@ opt = parser.parse_args(remaining_argv)
 
 if opt.pretrained in ['false', 'False']:
     opt.pretrained = False
+
+if opt.LrSchedule in ['false', 'False']:
+    opt.LrSchedule = False # TODO: PROBABLY has activation bug for LrSchedule
+
 
 opt.outf = w_fname + opt.outf
 

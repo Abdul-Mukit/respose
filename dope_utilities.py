@@ -574,8 +574,8 @@ class MultipleVertexJson(data.Dataset): # TODO: Find a way dataloader for genera
 
         if not self.normal is None:
             normalize = transforms.Compose([transforms.Normalize
-                                            ((self.normal[0], self.normal[0], self.normal[0]),
-                                             (self.normal[1], self.normal[1], self.normal[1])),
+                                            ((self.normal[0][0], self.normal[0][1], self.normal[0][2]),
+                                             (self.normal[1][0], self.normal[1][1], self.normal[1][2])),
                                             AddNoise(self.noise)])
         else:
             normalize = transforms.Compose([AddNoise(0.0001)])
@@ -947,7 +947,7 @@ def save_image(tensor, filename, nrow=4, padding=2, mean=None, std=None):
 
 
 ##################################################
-# UTILS CODE FOR LOADING THE DATA
+# UTILS CODE FOR Display
 ##################################################
 
 def DrawLine(point1, point2, lineColor, lineWidth, draw):

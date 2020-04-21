@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torchvision
-from torchvision.models.resnet import Bottleneck, conv3x3, BasicBlock
+from torchvision.models.resnet import Bottleneck, conv3x3, BasicBlock, conv1x1
 import torch
 from torchvision import models
 
@@ -42,7 +42,7 @@ class BottleneckMod(Bottleneck):
 class ResPoseNetwork2(nn.Module):
     def __init__(
             self,
-            pretrained=False,
+            pretrained=True,
             numBeliefMap=9,
             numAffinity=16,
             stop_at_stage=6  # number of stages to process (if less than total number of stages)
@@ -54,50 +54,48 @@ class ResPoseNetwork2(nn.Module):
         self.numAffinity = numAffinity
         self.stop_at_stage = stop_at_stage
 
-        # Including pretrained-resnet upto Layer2
-        resnet = torchvision.models.resnet18(pretrained=pretrained)
-        self.conv1 = resnet.conv1
-        self.bn1 = resnet.bn1
-        self.relu = resnet.relu
-        self.maxpool = resnet.maxpool
-        self.layer1 = resnet.layer1
-        self.layer2 = resnet.layer2
+        if pretrained is False:
+            print("Training network without imagenet weights.")
+            vgg_full = models.vgg19(pretrained=False).features
+        else:
+            print("Training network pretrained on imagenet.")
+            vgg_full = models.vgg19(pretrained=False)
+            vgg_full.load_state_dict(torch.load("weights/vgg19-dcbb9e9d.pth"))
+            print('Loading vgg pretrained weights from : ' + "weights/vgg19-dcbb9e9d.pth")
+            vgg_full = vgg_full.features
 
-        self.features = nn.Sequential(BasicBlock(128, 128),
-                                      BasicBlock(128, 128))
+        self.vgg = nn.Sequential()
+        for i_layer in range(24):
+            self.vgg.add_module(str(i_layer), vgg_full[i_layer])
 
-        # Both Belief and Affnity calculation
+        # Add some layers
+        i_layer = 23
+        self.vgg.add_module(str(i_layer), nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1))
+        self.vgg.add_module(str(i_layer + 1), nn.ReLU(inplace=True))
+        self.vgg.add_module(str(i_layer + 2), nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1))
+        self.vgg.add_module(str(i_layer + 3), nn.ReLU(inplace=True))
+
+        # print('---Belief------------------------------------------------')
+        # _2 are the belief map stages
         self.cas1 = ResPoseNetwork2.create_stage(128,
-                                             numBeliefMap + numAffinity, True)
+                                                numBeliefMap + numAffinity, True)
         self.cas2 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap + numAffinity, False)
+                                                numBeliefMap + numAffinity, False)
         self.cas3 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap + numAffinity, False)
+                                                numBeliefMap + numAffinity, False)
         self.cas4 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap + numAffinity, False)
+                                                numBeliefMap + numAffinity, False)
         self.cas5 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap + numAffinity, False)
+                                                numBeliefMap + numAffinity, False)
         self.cas6 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
-                                             numBeliefMap + numAffinity, False)
-        # self.cas7 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
-        #                                          numBeliefMap + numAffinity, False)
-        # self.cas8 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
-        #                                          numBeliefMap + numAffinity, False)
+                                                numBeliefMap + numAffinity, False)
 
     def forward(self, x):
         '''Runs inference on the neural network'''
         numBeliefMap = self.numBeliefMap
         numAffinity = self.numAffinity
 
-        # Same Resnet50 upto Layer-2
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
-        x = self.layer1(x)
-        x = self.layer2(x)
-
-        in1 = self.features(x)
+        in1 = self.vgg(x)
 
         out1 = self.cas1(in1)
         if self.stop_at_stage == 1:
@@ -125,18 +123,7 @@ class ResPoseNetwork2(nn.Module):
 
         in6 = torch.cat([out5, in1], 1)
         out6 = self.cas6(in6)
-        if self.stop_at_stage == 6:
-            return [out1, out2, out3, out4, out5, out6]
-
-        # in7 = torch.cat([out6, in1], 1)
-        # out7 = self.cas6(in7)
-        # if self.stop_at_stage == 7:
-        #     return [out1, out2, out3, out4, out5, out6, out7]
-        #
-        # in8 = torch.cat([out7, in1], 1)
-        # out8 = self.cas6(in8)
-        # if self.stop_at_stage == 8:
-        #     return [out1, out2, out3, out4, out5, out6, out7, out8]
+        return [out1, out2, out3, out4, out5, out6]
 
     @staticmethod
     def create_stage(in_channels, out_channels, first=False):
@@ -158,7 +145,7 @@ class ResPoseNetwork2(nn.Module):
 
         # First convolution
         model.append(nn.Conv2d(in_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
-        model.append(nn.BatchNorm2d(mid_channels))
+        # model.append(nn.BatchNorm2d(mid_channels))
 
         # Middle convolutions
         i = 1
@@ -166,14 +153,14 @@ class ResPoseNetwork2(nn.Module):
             model.append(nn.ReLU(inplace=True))
             i += 1
             model.append(nn.Conv2d(mid_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
-            model.append(nn.BatchNorm2d(mid_channels))
+            # model.append(nn.BatchNorm2d(mid_channels))
             i += 1
 
         # Penultimate convolution
         model.append(nn.ReLU(inplace=True))
         i += 1
         model.append(nn.Conv2d(mid_channels, final_channels, kernel_size=1, stride=1))
-        model.append(nn.BatchNorm2d(final_channels))
+        # model.append(nn.BatchNorm2d(final_channels))
         i += 1
 
         # Last convolution
@@ -183,6 +170,108 @@ class ResPoseNetwork2(nn.Module):
         i += 1
 
         return nn.Sequential(*model)
+
+
+# class ResPoseNetwork2(nn.Module):
+#     def __init__(
+#             self,
+#             pretrained=True,
+#             numBeliefMap=9,
+#             numAffinity=16,
+#             stop_at_stage=6  # number of stages to process (if less than total number of stages)
+#
+#     ):
+#         super(ResPoseNetwork2, self).__init__()
+#         self.pretrained = pretrained
+#         self.numBeliefMap = numBeliefMap
+#         self.numAffinity = numAffinity
+#         self.stop_at_stage = stop_at_stage
+#         mid_ch = 128
+#         cas_ch = 153
+#         out_ch = 25
+#
+#         # Including pretrained-resnet upto Layer2
+#         resnet = torchvision.models.resnet18(pretrained=pretrained)
+#         self.conv1 = resnet.conv1
+#         self.bn1 = resnet.bn1
+#         self.relu = resnet.relu
+#         self.maxpool = resnet.maxpool
+#         self.layer1 = resnet.layer1
+#         self.layer2 = resnet.layer2
+#
+#         self.features = nn.Sequential(BasicBlock(mid_ch, mid_ch),
+#                                       BasicBlock(mid_ch, mid_ch))
+#
+#         # Both Belief and Affnity calculation
+#         self.cas1 = ResPoseNetwork2.make_cascade(mid_ch, out_ch)
+#         self.cas2 = ResPoseNetwork2.make_cascade(cas_ch, out_ch)
+#         self.cas3 = ResPoseNetwork2.make_cascade(cas_ch, out_ch)
+#         self.cas4 = ResPoseNetwork2.make_cascade(cas_ch, out_ch)
+#         self.cas5 = ResPoseNetwork2.make_cascade(cas_ch, out_ch)
+#         self.cas6 = ResPoseNetwork2.make_cascade(cas_ch, out_ch)
+#         # self.cas7 = ResPoseNetwork2.make_cascade(cas_ch, out_ch)
+#         # self.cas8 = ResPoseNetwork2.make_cascade(cas_ch, out_ch)
+#
+#
+#     def forward(self, x):
+#         '''Runs inference on the neural network'''
+#         numBeliefMap = self.numBeliefMap
+#         numAffinity = self.numAffinity
+#
+#         # Same Resnet50 upto Layer-2
+#         x = self.conv1(x)
+#         x = self.bn1(x)
+#         x = self.relu(x)
+#         x = self.maxpool(x)
+#         x = self.layer1(x)
+#         x = self.layer2(x)
+#
+#         in1 = self.features(x)
+#
+#         out1 = self.cas1(in1)
+#         if self.stop_at_stage == 1:
+#             return [out1]
+#
+#         in2 = torch.cat([out1, in1], 1)
+#         out2 = self.cas2(in2)
+#         if self.stop_at_stage == 2:
+#             return [out1, out2]
+#
+#         in3 = torch.cat([out2, in1], 1)
+#         out3 = self.cas3(in3)
+#         if self.stop_at_stage == 3:
+#             return [out1, out2, out3]
+#
+#         in4 = torch.cat([out3, in1], 1)
+#         out4 = self.cas4(in4)
+#         if self.stop_at_stage == 4:
+#             return [out1, out2, out3, out4]
+#
+#         in5 = torch.cat([out4, in1], 1)
+#         out5 = self.cas5(in5)
+#         if self.stop_at_stage == 5:
+#             return [out1, out2, out3, out4, out5]
+#
+#         in6 = torch.cat([out5, in1], 1)
+#         out6 = self.cas6(in6)
+#         if self.stop_at_stage == 6:
+#             return [out1, out2, out3, out4, out5, out6]
+#
+#     @staticmethod
+#     def make_downsample(in_planes, out_planes):
+#         return nn.Sequential(conv1x1(in_planes, out_planes, stride=1),
+#                              nn.BatchNorm2d(out_planes))
+#
+#     @staticmethod
+#     def make_cascade(in_planes, out_planes):
+#         cascade = nn.Sequential(BasicBlock(in_planes, in_planes),
+#                                 BasicBlock(in_planes, in_planes),
+#                                 BasicBlock(in_planes, in_planes),
+#                                 nn.ReLU(inplace=True),
+#                                 conv3x3(in_planes, out_planes))
+#         return cascade
+
+
 
 # class ResPoseNetwork2(nn.Module):
 #     def __init__(self, pretrained=True, numBeliefMap=9, numAffinity=16):

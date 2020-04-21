@@ -145,7 +145,7 @@ class ResPoseNetwork2(nn.Module):
 
         # First convolution
         model.append(nn.Conv2d(in_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
-        # model.append(nn.BatchNorm2d(mid_channels))
+        model.append(nn.BatchNorm2d(mid_channels))
 
         # Middle convolutions
         i = 1
@@ -153,14 +153,14 @@ class ResPoseNetwork2(nn.Module):
             model.append(nn.ReLU(inplace=True))
             i += 1
             model.append(nn.Conv2d(mid_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
-            # model.append(nn.BatchNorm2d(mid_channels))
+            model.append(nn.BatchNorm2d(mid_channels))
             i += 1
 
         # Penultimate convolution
         model.append(nn.ReLU(inplace=True))
         i += 1
         model.append(nn.Conv2d(mid_channels, final_channels, kernel_size=1, stride=1))
-        # model.append(nn.BatchNorm2d(final_channels))
+        model.append(nn.BatchNorm2d(final_channels))
         i += 1
 
         # Last convolution

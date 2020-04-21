@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torchvision
-from torchvision.models.resnet import Bottleneck, conv3x3
+from torchvision.models.resnet import Bottleneck, conv3x3, BasicBlock
 import torch
 from torchvision import models
 
@@ -45,7 +45,7 @@ class ResPoseNetwork2(nn.Module):
             pretrained=False,
             numBeliefMap=9,
             numAffinity=16,
-            stop_at_stage=8  # number of stages to process (if less than total number of stages)
+            stop_at_stage=6  # number of stages to process (if less than total number of stages)
     ):
         super(ResPoseNetwork2, self).__init__()
 
@@ -55,7 +55,7 @@ class ResPoseNetwork2(nn.Module):
         self.stop_at_stage = stop_at_stage
 
         # Including pretrained-resnet upto Layer2
-        resnet = torchvision.models.resnet34(pretrained=pretrained)
+        resnet = torchvision.models.resnet18(pretrained=pretrained)
         self.conv1 = resnet.conv1
         self.bn1 = resnet.bn1
         self.relu = resnet.relu
@@ -63,13 +63,8 @@ class ResPoseNetwork2(nn.Module):
         self.layer1 = resnet.layer1
         self.layer2 = resnet.layer2
 
-        # Changing ch dimensions to 128
-        # self.features = nn.Sequential(conv3x3(512, 256),
-        #                               nn.BatchNorm2d(256),
-        #                               nn.ReLU(inplace=True),
-        #                               conv3x3(256, 128),
-        #                               nn.BatchNorm2d(128),
-        #                               nn.ReLU(inplace=True))
+        self.features = nn.Sequential(BasicBlock(128, 128),
+                                      BasicBlock(128, 128))
 
         # Both Belief and Affnity calculation
         self.cas1 = ResPoseNetwork2.create_stage(128,
@@ -84,10 +79,10 @@ class ResPoseNetwork2(nn.Module):
                                              numBeliefMap + numAffinity, False)
         self.cas6 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
-        self.cas7 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
-                                                 numBeliefMap + numAffinity, False)
-        self.cas8 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
-                                                 numBeliefMap + numAffinity, False)
+        # self.cas7 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
+        #                                          numBeliefMap + numAffinity, False)
+        # self.cas8 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
+        #                                          numBeliefMap + numAffinity, False)
 
     def forward(self, x):
         '''Runs inference on the neural network'''
@@ -100,9 +95,9 @@ class ResPoseNetwork2(nn.Module):
         x = self.relu(x)
         x = self.maxpool(x)
         x = self.layer1(x)
-        in1 = self.layer2(x)
+        x = self.layer2(x)
 
-        # in1 = self.features(x)
+        in1 = self.features(x)
 
         out1 = self.cas1(in1)
         if self.stop_at_stage == 1:
@@ -133,15 +128,15 @@ class ResPoseNetwork2(nn.Module):
         if self.stop_at_stage == 6:
             return [out1, out2, out3, out4, out5, out6]
 
-        in7 = torch.cat([out6, in1], 1)
-        out7 = self.cas6(in7)
-        if self.stop_at_stage == 7:
-            return [out1, out2, out3, out4, out5, out6, out7]
-
-        in8 = torch.cat([out7, in1], 1)
-        out8 = self.cas6(in8)
-        if self.stop_at_stage == 8:
-            return [out1, out2, out3, out4, out5, out6, out7, out8]
+        # in7 = torch.cat([out6, in1], 1)
+        # out7 = self.cas6(in7)
+        # if self.stop_at_stage == 7:
+        #     return [out1, out2, out3, out4, out5, out6, out7]
+        #
+        # in8 = torch.cat([out7, in1], 1)
+        # out8 = self.cas6(in8)
+        # if self.stop_at_stage == 8:
+        #     return [out1, out2, out3, out4, out5, out6, out7, out8]
 
     @staticmethod
     def create_stage(in_channels, out_channels, first=False):
@@ -163,6 +158,7 @@ class ResPoseNetwork2(nn.Module):
 
         # First convolution
         model.append(nn.Conv2d(in_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
+        model.append(nn.BatchNorm2d(mid_channels))
 
         # Middle convolutions
         i = 1
@@ -170,12 +166,14 @@ class ResPoseNetwork2(nn.Module):
             model.append(nn.ReLU(inplace=True))
             i += 1
             model.append(nn.Conv2d(mid_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
+            model.append(nn.BatchNorm2d(mid_channels))
             i += 1
 
         # Penultimate convolution
         model.append(nn.ReLU(inplace=True))
         i += 1
         model.append(nn.Conv2d(mid_channels, final_channels, kernel_size=1, stride=1))
+        model.append(nn.BatchNorm2d(final_channels))
         i += 1
 
         # Last convolution

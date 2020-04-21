@@ -188,6 +188,10 @@ parser.add_argument('--LrSchedule',
                     default=True,
                     help='Choose whether to use a auto LrScheduler')
 
+parser.add_argument('--featureNet',
+                    default='resnet',
+                    help="One of 'vgg' or 'resnet'. This is important for selecting proper Transforms")
+
 # Read the config but do not overwrite the args written
 args, remaining_argv = conf_parser.parse_known_args()
 defaults = {"option": "default"}
@@ -225,7 +229,13 @@ if not opt.save:
     contrast = 0.2
     brightness = 0.2
     noise = 0.1
-    normal_imgs = [0.59, 0.25]
+    # normal_imgs = [0.59, 0.25]
+    if opt.featureNet == 'vgg':
+        normal_imgs = [[0.59, 0.59, 0.59],
+                       [0.25, 0.25, 0.25]]
+    elif opt.featureNet == 'resnet':
+        normal_imgs = [[0.485, 0.456, 0.406],
+                       [0.229, 0.224, 0.225]]
     transform = transforms.Compose([
         AddRandomContrast(contrast),
         AddRandomBrightness(brightness),

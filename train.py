@@ -59,6 +59,7 @@ from networks import *
 from networks_exp import *
 import sys
 import re
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 warnings.filterwarnings("ignore")
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
@@ -182,6 +183,10 @@ parser.add_argument('--datasize',
 parser.add_argument('--network',
                     default="ResPose2",
                     help='choose either "DOPE", "ResPose", "ResPose2" to train. name outf, namefile accordingly')
+
+parser.add_argument('--LrSchedule',
+                    default=True,
+                    help='Choose whether to use a auto LrScheduler')
 
 # Read the config but do not overwrite the args written
 args, remaining_argv = conf_parser.parse_known_args()
@@ -331,6 +336,8 @@ else:
 
 parameters = filter(lambda p: p.requires_grad, net.parameters())
 optimizer = optim.Adam(parameters, lr=opt.lr)
+if opt.LrSchedule:
+    scheduler = ReduceLROnPlateau(optimizer, verbose=True)
 
 if is_new_training:  # truncate exist
     # ing file then write title words
@@ -425,11 +432,15 @@ def _runnetwork(epoch, loader, train=True):
             torch.save(net.state_dict(), '{}/net_{}.pth'.format(opt.outf, opt.namefile))
             break
 
+    return loss.data # return loss
+
 
 for epoch in range(last_epoch + 1, opt.epochs + 1):
     start = datetime.datetime.now()
     if not trainingdata is None:
-        _runnetwork(epoch, trainingdata)
+        cur_epoch_loss = _runnetwork(epoch, trainingdata)
+        if opt.LrSchedule:
+            scheduler.step(cur_epoch_loss)
 
     if not opt.datatest == "":
         _runnetwork(epoch, testingdata, train=False)

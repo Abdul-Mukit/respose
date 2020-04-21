@@ -108,7 +108,8 @@ class ResPoseNetwork(nn.Module):
     def create_stage(in_channels, out_channels, first=False):
         '''Create the neural network layers for a single stage.'''
 
-        model = nn.Sequential()
+        # model = nn.Sequential()
+        model = []
         mid_channels = 128
         if first:
             padding = 1
@@ -122,42 +123,29 @@ class ResPoseNetwork(nn.Module):
             final_channels = mid_channels
 
         # First convolution
-        model.add_module("0",
-                         nn.Conv2d(
-                             in_channels,
-                             mid_channels,
-                             kernel_size=kernel,
-                             stride=1,
-                             padding=padding)
-                         )
+        model.append(nn.Conv2d(in_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
 
         # Middle convolutions
         i = 1
         while i < count - 1:
-            model.add_module(str(i), nn.ReLU(inplace=True))
+            model.append(nn.ReLU(inplace=True))
             i += 1
-            model.add_module(str(i),
-                             nn.Conv2d(
-                                 mid_channels,
-                                 mid_channels,
-                                 kernel_size=kernel,
-                                 stride=1,
-                                 padding=padding))
+            model.append(nn.Conv2d(mid_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
             i += 1
 
         # Penultimate convolution
-        model.add_module(str(i), nn.ReLU(inplace=True))
+        model.append(nn.ReLU(inplace=True))
         i += 1
-        model.add_module(str(i), nn.Conv2d(mid_channels, final_channels, kernel_size=1, stride=1))
+        model.append(nn.Conv2d(mid_channels, final_channels, kernel_size=1, stride=1))
         i += 1
 
         # Last convolution
-        model.add_module(str(i), nn.ReLU(inplace=True))
+        model.append(nn.ReLU(inplace=True))
         i += 1
-        model.add_module(str(i), nn.Conv2d(final_channels, out_channels, kernel_size=1, stride=1))
+        model.append(nn.Conv2d(final_channels, out_channels, kernel_size=1, stride=1))
         i += 1
 
-        return model
+        return nn.Sequential(*model)
 
 
 class DopeNetwork(nn.Module):

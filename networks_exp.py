@@ -39,15 +39,15 @@ class BottleneckMod(Bottleneck):
         return out
 
 
-class ResPoseNetwork1p2(nn.Module):
+class ResPoseNetwork2(nn.Module):
     def __init__(
             self,
             pretrained=False,
             numBeliefMap=9,
             numAffinity=16,
-            stop_at_stage=6  # number of stages to process (if less than total number of stages)
+            stop_at_stage=8  # number of stages to process (if less than total number of stages)
     ):
-        super(ResPoseNetwork1p2, self).__init__()
+        super(ResPoseNetwork2, self).__init__()
 
         self.pretrained = pretrained
         self.numBeliefMap = numBeliefMap
@@ -55,7 +55,7 @@ class ResPoseNetwork1p2(nn.Module):
         self.stop_at_stage = stop_at_stage
 
         # Including pretrained-resnet upto Layer2
-        resnet = torchvision.models.resnet50(pretrained=pretrained)
+        resnet = torchvision.models.resnet34(pretrained=pretrained)
         self.conv1 = resnet.conv1
         self.bn1 = resnet.bn1
         self.relu = resnet.relu
@@ -63,19 +63,31 @@ class ResPoseNetwork1p2(nn.Module):
         self.layer1 = resnet.layer1
         self.layer2 = resnet.layer2
 
+        # Changing ch dimensions to 128
+        # self.features = nn.Sequential(conv3x3(512, 256),
+        #                               nn.BatchNorm2d(256),
+        #                               nn.ReLU(inplace=True),
+        #                               conv3x3(256, 128),
+        #                               nn.BatchNorm2d(128),
+        #                               nn.ReLU(inplace=True))
+
         # Both Belief and Affnity calculation
-        self.cas1 = ResPoseNetwork1p2.create_stage(128,
+        self.cas1 = ResPoseNetwork2.create_stage(128,
                                              numBeliefMap + numAffinity, True)
-        self.cas2 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas2 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
-        self.cas3 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas3 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
-        self.cas4 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas4 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
-        self.cas5 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas5 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
-        self.cas6 = ResPoseNetwork1p2.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas6 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
+        self.cas7 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
+                                                 numBeliefMap + numAffinity, False)
+        self.cas8 = ResPoseNetwork2.create_stage(128 + numBeliefMap + numAffinity,
+                                                 numBeliefMap + numAffinity, False)
 
     def forward(self, x):
         '''Runs inference on the neural network'''
@@ -89,6 +101,8 @@ class ResPoseNetwork1p2(nn.Module):
         x = self.maxpool(x)
         x = self.layer1(x)
         in1 = self.layer2(x)
+
+        # in1 = self.features(x)
 
         out1 = self.cas1(in1)
         if self.stop_at_stage == 1:
@@ -116,69 +130,125 @@ class ResPoseNetwork1p2(nn.Module):
 
         in6 = torch.cat([out5, in1], 1)
         out6 = self.cas6(in6)
-        return [out1, out2, out3, out4, out5, out6]
+        if self.stop_at_stage == 6:
+            return [out1, out2, out3, out4, out5, out6]
 
-class ResPoseNetwork2(nn.Module):
-    def __init__(self, pretrained=True, numBeliefMap=9, numAffinity=16):
-        super(ResPoseNetwork2, self).__init__()
-        self.pretrained = pretrained
-        self.numBeliefMap = numBeliefMap
-        self.numAffinity = numAffinity
+        in7 = torch.cat([out6, in1], 1)
+        out7 = self.cas6(in7)
+        if self.stop_at_stage == 7:
+            return [out1, out2, out3, out4, out5, out6, out7]
 
-        resnet = torchvision.models.resnet50(pretrained=pretrained)
+        in8 = torch.cat([out7, in1], 1)
+        out8 = self.cas6(in8)
+        if self.stop_at_stage == 8:
+            return [out1, out2, out3, out4, out5, out6, out7, out8]
 
-        # for param in resnet.parameters():
-        #     param.requires_grad = False
+    @staticmethod
+    def create_stage(in_channels, out_channels, first=False):
+        '''Create the neural network layers for a single stage.'''
 
-        self.conv1 = resnet.conv1
-        self.bn1 = resnet.bn1
-        self.relu = resnet.relu
-        self.maxpool = resnet.maxpool
-        self.layer1 = resnet.layer1
-        self.layer2 = resnet.layer2
+        # model = nn.Sequential()
+        model = []
+        mid_channels = 128
+        if first:
+            padding = 1
+            kernel = 3
+            count = 6
+            final_channels = 512
+        else:
+            padding = 3
+            kernel = 7
+            count = 10
+            final_channels = mid_channels
 
-        # Defining the Cascades
-        self.cas1 = nn.Sequential(BottleneckMod(512, 128, position='Start'), BottleneckMod(512, 128))
-        self.cas2 = nn.Sequential(BottleneckMod(512, 128), BottleneckMod(512, 128))
-        self.cas3 = nn.Sequential(BottleneckMod(512, 128), BottleneckMod(512, 128))
-        self.cas4 = nn.Sequential(BottleneckMod(512, 128), BottleneckMod(512, 128))
+        # First convolution
+        model.append(nn.Conv2d(in_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
 
-        # Defining the final Maps Layer
-        self.maps = nn.Sequential(nn.ReLU(inplace=True),
-                                  conv3x3(512, 256),
-                                  nn.BatchNorm2d(256),
-                                  conv3x3(256, numBeliefMap + numAffinity))
-                                  # nn.BatchNorm2d(numBeliefMap + numAffinity))
+        # Middle convolutions
+        i = 1
+        while i < count - 1:
+            model.append(nn.ReLU(inplace=True))
+            i += 1
+            model.append(nn.Conv2d(mid_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
+            i += 1
 
+        # Penultimate convolution
+        model.append(nn.ReLU(inplace=True))
+        i += 1
+        model.append(nn.Conv2d(mid_channels, final_channels, kernel_size=1, stride=1))
+        i += 1
 
-    def forward(self, x):
-        '''Runs inference on the neural network'''
-        numBeliefMap = self.numBeliefMap
-        numAffinity = self.numAffinity
-        numOutMaps = numBeliefMap + numAffinity ## TODO: in future will include * numClass
+        # Last convolution
+        model.append(nn.ReLU(inplace=True))
+        i += 1
+        model.append(nn.Conv2d(final_channels, out_channels, kernel_size=1, stride=1))
+        i += 1
 
-        # Same Resnet50 upto Layer-2
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
-        x = self.layer1(x)
-        x = self.layer2(x)
+        return nn.Sequential(*model)
 
-        # Cascades
-        out1 = self.cas1(x)
-        out2 = self.cas2(out1)
-        out3 = self.cas3(out2)
-        out4 = self.cas4(out3)
-
-        # Maps layer
-        out5 = self.maps(out4)
-        # out5 += out4[:, :numOutMaps, :, :]
-
-        return [out1[:, :numOutMaps, :, :],
-                out2[:, :numOutMaps, :, :],
-                out3[:, :numOutMaps, :, :],
-                out4[:, :numOutMaps, :, :],
-                out5]
+# class ResPoseNetwork2(nn.Module):
+#     def __init__(self, pretrained=True, numBeliefMap=9, numAffinity=16):
+#         super(ResPoseNetwork2, self).__init__()
+#         self.pretrained = pretrained
+#         self.numBeliefMap = numBeliefMap
+#         self.numAffinity = numAffinity
+#
+#         resnet = torchvision.models.resnet50(pretrained=pretrained)
+#         # for param in resnet.parameters():
+#         #     param.requires_grad = False
+#
+#         self.conv1 = resnet.conv1
+#         self.bn1 = resnet.bn1
+#         self.relu = resnet.relu
+#         self.maxpool = resnet.maxpool
+#         self.layer1 = resnet.layer1
+#         self.layer2 = resnet.layer2
+#
+#         # Defining the Cascades
+#         # self.cas1 = nn.Sequential(BottleneckMod(512, 128, position='Start'), BottleneckMod(512, 128))
+#         self.cas1 = nn.Sequential(Bottleneck(512, 128), Bottleneck(512, 128))
+#         self.cas2 = nn.Sequential(Bottleneck(512, 128), Bottleneck(512, 128))
+#         self.cas3 = nn.Sequential(Bottleneck(512, 128), Bottleneck(512, 128))
+#         self.cas4 = nn.Sequential(Bottleneck(512, 128), Bottleneck(512, 128))
+#
+#         # Defining the final Maps Layer
+#         self.maps = nn.Sequential(conv3x3(512, 256),
+#                                   nn.BatchNorm2d(256),
+#                                   nn.ReLU(inplace=True),
+#                                   conv3x3(256, numBeliefMap + numAffinity))
+#                                   # nn.BatchNorm2d(numBeliefMap + numAffinity))
+#
+#
+#     def forward(self, x):
+#         '''Runs inference on the neural network'''
+#         numBeliefMap = self.numBeliefMap
+#         numAffinity = self.numAffinity
+#         numOutMaps = numBeliefMap + numAffinity ## TODO: in future will include * numClass
+#
+#         # Same Resnet50 upto Layer-2
+#         x = self.conv1(x)
+#         x = self.bn1(x)
+#         x = self.relu(x)
+#         x = self.maxpool(x)
+#         x = self.layer1(x)
+#         x = self.layer2(x)
+#
+#         # Cascades
+#         out1 = self.cas1(x)
+#         out2 = self.cas2(out1)
+#         out3 = self.cas3(out2)
+#         out4 = self.cas4(out3)
+#
+#         # Maps layer
+#         out5 = self.maps(out4)
+#         # out5 += out4[:, :numOutMaps, :, :]
+#
+#         return [out5]
+#
+#         # return [out1[:, :numOutMaps, :, :],
+#         #         out2[:, :numOutMaps, :, :],
+#         #         out3[:, :numOutMaps, :, :],
+#         #         out4[:, :numOutMaps, :, :],
+#         #         out5]
 
 

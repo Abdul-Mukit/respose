@@ -114,24 +114,32 @@ class ResNetPose(nn.Module):
         in_feature = torch.cat([out9, x], 1)
         out10 = self.map10(in_feature)
 
-        return [out1, out2, out3, out4, out5,
+        return [out3, out4, out5,
                 out6, out7, out8, out9, out10]
 
     @staticmethod
     def make_map_block(in_planes=153, out_planes=25):
         map_block = []
-        mid_ch = 64
         # map_block.append(BasicBlock(in_planes, in_planes))
-        map_block.append(conv1x1(in_planes, mid_ch))
-        map_block.append(conv3x3(mid_ch, mid_ch))
-        map_block.append(conv3x3(mid_ch, mid_ch))
+        # map_block.append(BasicBlock(in_planes, in_planes))
+        # map_block.append(BasicBlock(in_planes, in_planes))
+        # map_block.append(nn.Conv2d(in_planes, out_planes, kernel_size=3, padding=1))
+
+
+        map_block.append(conv3x3(in_planes, in_planes))
         map_block.append(nn.ReLU(inplace=True))
-        map_block.append(conv3x3(mid_ch, mid_ch))
-        map_block.append(conv3x3(mid_ch, mid_ch))
+        map_block.append(conv3x3(in_planes, in_planes))
         map_block.append(nn.ReLU(inplace=True))
-        map_block.append(conv1x1(mid_ch, in_planes))
-        map_block.append(conv3x3(in_planes, in_planes*2))
+        map_block.append(conv3x3(in_planes, in_planes))
+        map_block.append(nn.ReLU(inplace=True))
+        map_block.append(conv3x3(in_planes, in_planes))
+        map_block.append(nn.ReLU(inplace=True))
+        map_block.append(conv1x1(in_planes, in_planes*2))
+        map_block.append(nn.ReLU(inplace=True))
+        map_block.append(conv3x3(in_planes*2, in_planes*2))
+        map_block.append(nn.ReLU(inplace=True))
         map_block.append(nn.Conv2d(in_planes*2, out_planes, kernel_size=3, padding=1))
+
 
         return nn.Sequential(*map_block)
 

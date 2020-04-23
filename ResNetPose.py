@@ -35,9 +35,18 @@ class ResNetPose(nn.Module):
             param.requires_grad = True
 
 
-        # Map
+        # Maps
         self.map1 = ResNetPose.make_map_block(in_planes=128)
-        self.mapX = ResNetPose.make_map_block()  # Map 2 to 5
+        self.map2 = ResNetPose.make_map_block()
+        self.map3 = ResNetPose.make_map_block()
+        self.map4 = ResNetPose.make_map_block()
+        self.map5 = ResNetPose.make_map_block()
+        self.map6 = ResNetPose.make_map_block()
+        self.map7 = ResNetPose.make_map_block()
+        self.map8 = ResNetPose.make_map_block()
+        self.map9 = ResNetPose.make_map_block()
+        self.map10 = ResNetPose.make_map_block()
+
 
         # Upsample blocks
         layer3_out_ch = resnet.layer3[-1].conv2.out_channels
@@ -63,7 +72,7 @@ class ResNetPose(nn.Module):
         # ---- Parallel (map_2 + layer_3) -----
         # Map-2
         in_feature = torch.cat([out1, x], 1)
-        out2 = self.mapX(in_feature)
+        out2 = self.map2(in_feature)
         # Cont.. ResNet
         x = self.layer3(x)
 
@@ -71,7 +80,7 @@ class ResNetPose(nn.Module):
         # Map-3
         in_feature = self.up_layer3(x)
         in_feature = torch.cat([out2, in_feature], 1)
-        out3 = self.mapX(in_feature)
+        out3 = self.map3(in_feature)
         # Cont.. ResNet
         x = self.layer4(x)
 
@@ -79,31 +88,31 @@ class ResNetPose(nn.Module):
         x = self.up_layer4a(x)
         x = self.up_layer4b(x)  # Preserved for Map-5 instead of overwriting to in_feature
         in_feature = torch.cat([out3, x], 1)
-        out4 = self.mapX(in_feature)
+        out4 = self.map4(in_feature)
 
         # Map-5
         in_feature = torch.cat([out4, x], 1)
-        out5 = self.mapX(in_feature)
+        out5 = self.map5(in_feature)
 
         # Map-6
         in_feature = torch.cat([out5, x], 1)
-        out6 = self.mapX(in_feature)
+        out6 = self.map6(in_feature)
 
         # Map-7
         in_feature = torch.cat([out6, x], 1)
-        out7 = self.mapX(in_feature)
+        out7 = self.map7(in_feature)
 
         # Map-8
         in_feature = torch.cat([out7, x], 1)
-        out8 = self.mapX(in_feature)
+        out8 = self.map8(in_feature)
 
         # Map-9
         in_feature = torch.cat([out8, x], 1)
-        out9 = self.mapX(in_feature)
+        out9 = self.map9(in_feature)
 
         # Map-10
         in_feature = torch.cat([out9, x], 1)
-        out10 = self.mapX(in_feature)
+        out10 = self.map10(in_feature)
 
         return [out1, out2, out3, out4, out5,
                 out6, out7, out8, out9, out10]
@@ -111,9 +120,6 @@ class ResNetPose(nn.Module):
     @staticmethod
     def make_map_block(in_planes=153, out_planes=25):
         map_block = []
-
-        map_block.append(BasicBlock(in_planes, in_planes))
-        map_block.append(BasicBlock(in_planes, in_planes))
         map_block.append(BasicBlock(in_planes, in_planes))
         map_block.append(BasicBlock(in_planes, in_planes))
         map_block.append(nn.Conv2d(in_planes, out_planes, kernel_size=3, padding=1))

@@ -13,7 +13,7 @@ class ResNetPose(nn.Module):
 
         resnet = torchvision.models.resnet34(pretrained=pretrained)
         print(f"Loading pretrained ResNet34: {pretrained}")
-        print("Freezing entire ResNet34...")
+        print("Freezing ResNet34 accepth layer-4...")
         for param in resnet.parameters():
             param.requires_grad = False
 
@@ -26,9 +26,14 @@ class ResNetPose(nn.Module):
         self.layer2 = resnet.layer2
         self.layer3 = resnet.layer3
         self.layer4 = resnet.layer4
+        for param in self.layer4.parameters():
+            param.requires_grad = True
 
         # pre-Map1-downsampler
         self.pre_map1_downsample = resnet.layer2[0]
+        for param in self.pre_map1_downsample.parameters():
+            param.requires_grad = True
+
 
         # Map
         self.map1 = ResNetPose.make_map_block(in_planes=128)
@@ -80,13 +85,36 @@ class ResNetPose(nn.Module):
         in_feature = torch.cat([out4, x], 1)
         out5 = self.mapX(in_feature)
 
-        return [out1, out2, out3, out4, out5]
+        # Map-6
+        in_feature = torch.cat([out5, x], 1)
+        out6 = self.mapX(in_feature)
+
+        # Map-7
+        in_feature = torch.cat([out6, x], 1)
+        out7 = self.mapX(in_feature)
+
+        # Map-8
+        in_feature = torch.cat([out7, x], 1)
+        out8 = self.mapX(in_feature)
+
+        # Map-9
+        in_feature = torch.cat([out8, x], 1)
+        out9 = self.mapX(in_feature)
+
+        # Map-10
+        in_feature = torch.cat([out9, x], 1)
+        out10 = self.mapX(in_feature)
+
+        return [out1, out2, out3, out4, out5,
+                out6, out7, out8, out9, out10]
 
     @staticmethod
     def make_map_block(in_planes=153, out_planes=25):
         map_block = []
 
-        # map_block.append(BasicBlock(in_planes, in_planes))
+        map_block.append(BasicBlock(in_planes, in_planes))
+        map_block.append(BasicBlock(in_planes, in_planes))
+        map_block.append(BasicBlock(in_planes, in_planes))
         map_block.append(BasicBlock(in_planes, in_planes))
         map_block.append(nn.Conv2d(in_planes, out_planes, kernel_size=3, padding=1))
 

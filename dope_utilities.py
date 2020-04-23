@@ -294,7 +294,7 @@ class MultipleVertexJson(data.Dataset): # TODO: Find a way dataloader for genera
                  target_transform=None,
                  loader=default_loader,
                  objectsofinterest="",
-                 img_size=400,
+                 img_size=416,
                  save=False,
                  noise=2,
                  data_size=None,
@@ -354,8 +354,8 @@ class MultipleVertexJson(data.Dataset): # TODO: Find a way dataloader for genera
         path, name, txt = self.imgs[index]
         img = self.loader(path)
 
-        img_size = img.size
-        img_size = (400, 400)
+        img_size = (self.img_size, self.img_size)
+        # img_size = (400, 400)
 
         loader = loadjson
 

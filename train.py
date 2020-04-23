@@ -115,7 +115,7 @@ parser.add_argument('--batchsizetest',
 
 parser.add_argument('--imagesize',
                     type=int,
-                    default=224,
+                    default=416,
                     help='Minimum 224, and multiple of 32')
 
 parser.add_argument('--lr',

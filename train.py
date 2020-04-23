@@ -55,11 +55,13 @@ import datetime
 import os
 import warnings
 from dope_utilities import *
-from networks import *
-from networks_exp import *
 import sys
 import re
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+
+from networks import *
+from networks_exp import *
+from ResNetPose import *
 
 warnings.filterwarnings("ignore")
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
@@ -113,8 +115,8 @@ parser.add_argument('--batchsizetest',
 
 parser.add_argument('--imagesize',
                     type=int,
-                    default=400,
-                    help='the height / width of the input image to network')
+                    default=224,
+                    help='Minimum 224, and multiple of 32')
 
 parser.add_argument('--lr',
                     type=float,
@@ -181,8 +183,8 @@ parser.add_argument('--datasize',
                     help='randomly sample that number of entries in the dataset folder')
 
 parser.add_argument('--network',
-                    default="ResPose2",
-                    help='choose either "DOPE", "ResPose", "ResPose2" to train. name outf, namefile accordingly')
+                    default="RNP",
+                    help='choose either "DOPE", "ResPose", "ResPose2","RNP" to train. name outf, namefile accordingly')
 
 parser.add_argument('--LrSchedule',
                     default=False,
@@ -268,6 +270,7 @@ if not opt.data is "":
         save=opt.save,
         transform=transform,
         normal=normal_imgs,
+        img_size=opt.imagesize,
         target_transform=transforms.Compose([
             transforms.Scale(opt.imagesize // 8),
         ]),
@@ -326,8 +329,10 @@ elif opt.network == "ResPose":
     net = ResPoseNetwork(pretrained=opt.pretrained)
 elif opt.network == "ResPose2":
     net = ResPoseNetwork2(pretrained=opt.pretrained)
+elif opt.network == "RNP":
+    net = ResNetPose(pretrained=opt.pretrained)
 else:
-    sys.exit("Select network from 'DOPE' or 'ResPose' to train")
+    sys.exit("Select network from 'DOPE', 'ResPose', 'ResPose2', 'RNP' to train")
 
 net = net.to(device)
 print(net)
@@ -387,7 +392,7 @@ def _runnetwork(epoch, loader, train=True):
 
         if opt.network == "DOPE":
             output_belief, output_affinities = net(data)
-        elif opt.network == "ResPose" or opt.network == "ResPose2":
+        else:
             output_belief, output_affinities = reshape_maps(net(data))  # shape of mapList is different from DOPE's
 
         # TODO: Remove debug prints for ouput-map shapes

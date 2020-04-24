@@ -14,8 +14,8 @@ class ResNetPose(nn.Module):
         resnet = torchvision.models.resnet34(pretrained=pretrained)
         print(f"Loading pretrained ResNet34: {pretrained}")
         print("Freezing ResNet34 accepth layer-4...")
-        # for param in resnet.parameters():
-        #     param.requires_grad = False
+        for param in resnet.parameters():
+            param.requires_grad = False
 
         # Original RenNet Chain
         self.conv1 = resnet.conv1
@@ -26,13 +26,13 @@ class ResNetPose(nn.Module):
         self.layer2 = resnet.layer2
         self.layer3 = resnet.layer3
         self.layer4 = resnet.layer4
-        for param in self.layer4.parameters():
-            param.requires_grad = True
+        # for param in self.layer4.parameters():
+        #     param.requires_grad = True
 
         # pre-Map1-downsampler
-        self.pre_map1_downsample = resnet.layer2[0]
-        for param in self.pre_map1_downsample.parameters():
-            param.requires_grad = True
+        # self.pre_map1_downsample = resnet.layer2[0]
+        # for param in self.pre_map1_downsample.parameters():
+        #     param.requires_grad = True
 
 
         # Maps
@@ -51,9 +51,9 @@ class ResNetPose(nn.Module):
         # Upsample blocks
         layer3_out_ch = resnet.layer3[-1].conv2.out_channels
         layer4_out_ch = resnet.layer4[-1].conv2.out_channels
-        self.up_layer3 = ResNetPose.make_upsample_block(layer3_out_ch)
-        self.up_layer4a = ResNetPose.make_upsample_block(layer4_out_ch)
-        self.up_layer4b = ResNetPose.make_upsample_block(layer4_out_ch // 2)
+        # self.up_layer3 = ResNetPose.make_upsample_block(layer3_out_ch)
+        self.up_layer4a = ResNetPose.make_upsample_block(layer4_out_ch, numb_BasicBlock=3)
+        self.up_layer4b = ResNetPose.make_upsample_block(layer4_out_ch // 2, numb_BasicBlock=6)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -124,14 +124,14 @@ class ResNetPose(nn.Module):
         # map_block.append(nn.Conv2d(in_planes, out_planes, kernel_size=3, padding=1))
 
 
-        map_block.append(conv3x3(in_planes, in_planes))
-        map_block.append(nn.ReLU(inplace=True))
-        map_block.append(conv3x3(in_planes, in_planes))
-        map_block.append(nn.ReLU(inplace=True))
-        map_block.append(conv3x3(in_planes, in_planes))
-        map_block.append(nn.ReLU(inplace=True))
-        map_block.append(conv3x3(in_planes, in_planes))
-        map_block.append(nn.ReLU(inplace=True))
+        # map_block.append(conv3x3(in_planes, in_planes))
+        # map_block.append(nn.ReLU(inplace=True))
+        # map_block.append(conv3x3(in_planes, in_planes))
+        # map_block.append(nn.ReLU(inplace=True))
+        # map_block.append(conv3x3(in_planes, in_planes))
+        # map_block.append(nn.ReLU(inplace=True))
+        # map_block.append(conv3x3(in_planes, in_planes))
+        # map_block.append(nn.ReLU(inplace=True))
         map_block.append(conv1x1(in_planes, in_planes*2))
         map_block.append(nn.ReLU(inplace=True))
         map_block.append(conv3x3(in_planes*2, in_planes*2))
@@ -142,21 +142,17 @@ class ResNetPose(nn.Module):
         return nn.Sequential(*map_block)
 
     @staticmethod
-    def make_upsample_block(in_planes):
+    def make_upsample_block(in_planes, numb_BasicBlock = 4):
         up_block = []
         k, s, p = 2, 2, 0  # Kernel, Stride, Padding for exactly halved output
         out_padding = 0
         out_planes = in_planes // 2  # for halving number of input channels
 
         up_block.append(nn.ConvTranspose2d(in_planes, out_planes, k, s, p, out_padding, bias=False))
-        up_block.append(nn.ReLU(inplace=True))
-        up_block.append(conv3x3(out_planes, out_planes))
-        up_block.append(nn.ReLU(inplace=True))
-        up_block.append(conv3x3(out_planes, out_planes))
-        up_block.append(nn.ReLU(inplace=True))
 
-        # up_block.append(nn.BatchNorm2d(out_planes))
-        # up_block.append(nn.ReLU(inplace=True))
+        for i in range(numb_BasicBlock):
+            up_block.append(nn.BatchNorm2d(out_planes))
+            up_block.append(nn.ReLU(inplace=True))
 
         return nn.Sequential(*up_block)
 

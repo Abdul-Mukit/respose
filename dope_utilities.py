@@ -103,9 +103,13 @@ def viz_belief_maps(activations, in_img):
     """
     fig, ax = plt.subplots(nrows=9, ncols=2, sharex=True, figsize=(20, 50))
     red = [255, 0, 0]
+    height, width = 480, 640
     for i, map in enumerate(activations):
+        map = map.detach().numpy()  # Converting PIL-Image object to Numpy
+        # map = cv2.cvtColor(map, cv2.COLOR_RGBA2GRAY)
+        map = cv2.resize(map, (width, height))
         # Create mask out of the belief map
-        map = create_belief_mask(map)
+        # map = create_belief_mask(map)
 
         overlaid_img = in_img.copy()
         overlaid_img[map == 1, :] = red  # Paint red

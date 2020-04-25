@@ -4,29 +4,6 @@ import torchvision
 import torchvision.models as models
 from torchvision.models.resnet import BasicBlock, conv3x3, conv1x1
 
-class BasicBlockMod(BasicBlock):
-    '''
-    * Will just cut out BN layers
-    '''
-    def __init__(self, inplanes, planes, downsample=None):
-        super(BasicBlockMod, self).__init__(inplanes, planes, downsample=downsample)
-        self.relu = nn.ReLU(inplace=False) # was throwing a error of not being able to compute gradient otherwise
-
-    def forward(self, x):
-        identity = x
-
-        out = self.conv1(x)
-        out = self.relu(out)
-        out = self.conv2(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-        out = self.relu(out)
-
-        return out
-
 
 class ResNetPose(nn.Module):
     def __init__(
@@ -48,35 +25,34 @@ class ResNetPose(nn.Module):
             vgg_full = models.vgg19(pretrained=False).features
         else:
             print("Training network pretrained on imagenet.")
-            vgg_full = models.vgg19(pretrained=False)
-            vgg_full.load_state_dict(torch.load("/home/mukit/PycharmProjects/ResPose/respose/weights/vgg19-dcbb9e9d.pth"))
-            print('Loading vgg pretrained weights from : ' + "/home/mukit/PycharmProjects/ResPose/respose/weights/vgg19-dcbb9e9d.pth")
+            vgg_full = models.vgg19(pretrained=True)
+            # vgg_full.load_state_dict(torch.load("/home/mukit/PycharmProjects/ResPose/respose/weights/vgg19-dcbb9e9d.pth"))
+            # print('Loading vgg pretrained weights from : ' + "/home/mukit/PycharmProjects/ResPose/respose/weights/vgg19-dcbb9e9d.pth")
             vgg_full = vgg_full.features
             for param in vgg_full.parameters():
                 param.requires_grad = False
-
 
         self.vgg = nn.Sequential()
         for i_layer in range(27):
             self.vgg.add_module(str(i_layer), vgg_full[i_layer])
 
-        # # Add some layers
-        # i_layer = 23
+        im_ch = 128
+        inter=60
         self.features = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(256, im_ch, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(im_ch, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(inter, im_ch, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True))
 
         # # Add some layers
@@ -109,7 +85,6 @@ class ResNetPose(nn.Module):
 
         x = self.vgg(x)
         in1 = self.features(x)
-
         out1 = self.cas1(in1)
         # out1_1 = self.m1_1(in1)
 
@@ -185,12 +160,6 @@ class ResNetPose(nn.Module):
         model.append(nn.Conv2d(final_channels, out_channels, kernel_size=1, stride=1))
 
         return nn.Sequential(*model)
-
-    @staticmethod
-    def make_downsample(in_planes, out_planes):
-        return nn.Sequential(conv1x1(in_planes, out_planes, stride=1),
-                             nn.BatchNorm2d(out_planes),
-                             nn.ReLU(inplace=False))
 
 
 

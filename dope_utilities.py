@@ -109,12 +109,12 @@ def viz_belief_maps(activations, in_img):
         # map = cv2.cvtColor(map, cv2.COLOR_RGBA2GRAY)
         map = cv2.resize(map, (width, height))
         # Create mask out of the belief map
-        # map = create_belief_mask(map)
+        mask = create_belief_mask(map)
 
         overlaid_img = in_img.copy()
-        overlaid_img[map == 1, :] = red  # Paint red
+        overlaid_img[mask == 1, :] = red  # Paint red
 
-        # Display Thresholded Belief Maps
+        # Display Belief Maps
         ax[i, 0].imshow(map, cmap='gray')
         ax[i, 0].set_title('Belief %s' % str(i))
 

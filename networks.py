@@ -5,8 +5,8 @@ from torch import nn
 import torchvision.models as models
 import torch
 
-
-class ResPoseNetwork(nn.Module):
+# ResPoseNetwork originally
+class DOPE_2(nn.Module):
     def __init__(
             self,
             pretrained=False,
@@ -14,7 +14,7 @@ class ResPoseNetwork(nn.Module):
             numAffinity=16,
             stop_at_stage=6  # number of stages to process (if less than total number of stages)
     ):
-        super(ResPoseNetwork, self).__init__()
+        super(DOPE_2, self).__init__()
 
         self.pretrained = pretrained
         self.numBeliefMap = numBeliefMap
@@ -22,7 +22,7 @@ class ResPoseNetwork(nn.Module):
         self.stop_at_stage = stop_at_stage
 
         if pretrained is False:
-            print("Training network without imagenet weights.")
+            # print("Training network without imagenet weights.")
             vgg_full = models.vgg19(pretrained=False).features
         else:
             print("Training network pretrained on imagenet.")
@@ -44,17 +44,17 @@ class ResPoseNetwork(nn.Module):
 
         # print('---Belief------------------------------------------------')
         # _2 are the belief map stages
-        self.cas1 = ResPoseNetwork.create_stage(128,
+        self.cas1 = DOPE_2.create_stage(128,
                                              numBeliefMap + numAffinity, True)
-        self.cas2 = ResPoseNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas2 = DOPE_2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
-        self.cas3 = ResPoseNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas3 = DOPE_2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
-        self.cas4 = ResPoseNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas4 = DOPE_2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
-        self.cas5 = ResPoseNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas5 = DOPE_2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
-        self.cas6 = ResPoseNetwork.create_stage(128 + numBeliefMap + numAffinity,
+        self.cas6 = DOPE_2.create_stage(128 + numBeliefMap + numAffinity,
                                              numBeliefMap + numAffinity, False)
 
     def forward(self, x):
@@ -164,7 +164,7 @@ class DopeNetwork(nn.Module):
         self.stop_at_stage = stop_at_stage
 
         if pretrained is False:
-            print("Training network without imagenet weights.")
+            # print("Training network without imagenet weights.")
             vgg_full = models.vgg19(pretrained=False).features
         else:
             print("Training network pretrained on imagenet.")

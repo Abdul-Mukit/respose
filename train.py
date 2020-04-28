@@ -183,15 +183,15 @@ parser.add_argument('--datasize',
                     help='randomly sample that number of entries in the dataset folder')
 
 parser.add_argument('--network',
-                    default="RNP",
-                    help='choose either "DOPE", "ResPose", "ResPose2","RNP" to train. name outf, namefile accordingly')
+                    default="DOPE",
+                    help='choose either "DOPE", "DOPE_2", "ResPose2","RNP" to train. name outf, namefile accordingly')
 
 parser.add_argument('--LrSchedule',
                     default=False,
                     help='Choose whether to use a auto LrScheduler')
 
 parser.add_argument('--featureNet',
-                    default='resnet',
+                    default='vgg',
                     help="One of 'vgg' or 'resnet'. This is important for selecting proper Transforms")
 
 # Read the config but do not overwrite the args written
@@ -325,8 +325,8 @@ device = torch.device("cuda:" + str(opt.gpuids[0]))
 print('device: ', device.index)
 if opt.network=="DOPE":
     net = DopeNetwork(pretrained=opt.pretrained)
-elif opt.network == "ResPose":
-    net = ResPoseNetwork(pretrained=opt.pretrained)
+elif opt.network == "DOPE_2": # previously named ResPoseNetwork
+    net = DOPE_2(pretrained=opt.pretrained)
 elif opt.network == "ResPose2":
     net = ResPoseNetwork2(pretrained=opt.pretrained)
 elif opt.network == "RNP":

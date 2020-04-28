@@ -70,13 +70,13 @@ class ModelData(object):
     def load_net_model_path(self, path):
         '''Loads network model from disk with given path'''
         model_loading_start_time = time.time()
-        print("Loading DOPE model '{}'...".format(path))
+        print("Loading model '{}'...".format(path))
         device = torch.device("cuda:" + str(self.gpu_id))
 
         if self.network == "DOPE": # TODO: Check whether network selection works
             net = DopeNetwork()
-        elif self.network == "ResPose":
-            net = ResPoseNetwork()
+        elif self.network == "DOPE_2":
+            net = DOPE_2()
         elif self.network == "ResPose2":
             net = ResPoseNetwork2()
 

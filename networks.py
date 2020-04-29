@@ -353,9 +353,9 @@ class DOPE_2p1(nn.Module):
         inter = 128
         self.features = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(256, im_ch, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(256, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(im_ch, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
                                       nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
@@ -595,9 +595,9 @@ class DOPE_2p2(nn.Module):
         inter = 128
         self.features = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(256, im_ch, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(256, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
-                                      nn.Conv2d(im_ch, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),
                                       nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
                                       nn.ReLU(inplace=True),

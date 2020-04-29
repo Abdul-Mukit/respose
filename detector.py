@@ -79,8 +79,8 @@ class ModelData(object):
             net = DOPE_2()
         elif self.network == "DOPE_2.1":
             net = DOPE_2p1()
-        elif self.network == "ResPose2":
-            net = ResPoseNetwork2()
+        elif self.network == "ResNetPose":
+            net = ResNetPose()
 
         net = net.to(device)  # For model not trained with dataparallel
         net.load_state_dict(torch.load(path))

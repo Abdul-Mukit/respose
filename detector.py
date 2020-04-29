@@ -45,7 +45,7 @@ transform = transforms.Compose([
 class ModelData(object):
     '''This class contains methods for loading the neural network'''
 
-    def __init__(self, name="", net_path="", gpu_id=0, network="ResPose2"):
+    def __init__(self, name="", net_path="", gpu_id=0, network="DOPE_2"):
         self.name = name
         self.net_path = net_path  # Path to trained network model
         self.net = None  # Trained network
@@ -77,6 +77,8 @@ class ModelData(object):
             net = DopeNetwork()
         elif self.network == "DOPE_2":
             net = DOPE_2()
+        elif self.network == "DOPE_2.1":
+            net = DOPE_2p1()
         elif self.network == "ResPose2":
             net = ResPoseNetwork2()
 
@@ -130,7 +132,7 @@ class ObjectDetector(object):
 
         if network == "DOPE":
             out, seg = net_model(image_torch)
-        elif network == "ResPose":
+        else:
             out, seg = reshape_maps(net_model(image_torch))  # shape of mapList is different from DOPE's
 
         vertex2 = out[-1][0]

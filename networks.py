@@ -320,6 +320,7 @@ class DOPE_2(nn.Module):
 
         return nn.Sequential(*model)
 
+
 class DOPE_2p1(nn.Module):
     def __init__(
             self,
@@ -463,6 +464,7 @@ class DOPE_2p1(nn.Module):
 
         return nn.Sequential(*model)
 
+
 class ResNetPose(nn.Module):
     def __init__(self, pretrained=True, numBeliefMap=9, numAffinity=16, stop_at_stage=5):
         super(ResNetPose, self).__init__()
@@ -562,6 +564,7 @@ class ResNetPose(nn.Module):
     #     map_block.append(nn.Conv2d(in_planes, out_planes, kernel_size=3, padding=1))
     #     return nn.Sequential(*map_block)
 
+
 class DOPE_2p2(nn.Module):
     def __init__(
             self,
@@ -570,7 +573,7 @@ class DOPE_2p2(nn.Module):
             numAffinity=16,
             stop_at_stage=6  # number of stages to process (if less than total number of stages)
     ):
-        super(DOPE_2p1, self).__init__()
+        super(DOPE_2p2, self).__init__()
 
         self.pretrained = pretrained
         self.numBeliefMap = numBeliefMap
@@ -582,38 +585,57 @@ class DOPE_2p2(nn.Module):
             vgg_full = models.vgg19(pretrained=False).features
         else:
             print("Training network pretrained on imagenet.")
-            vgg_full = models.vgg19(pretrained=True)
+            vgg_full = models.vgg19_bn(pretrained=True)
             vgg_full = vgg_full.features
             # for param in vgg_full.parameters():
             #     param.requires_grad = False
 
         self.vgg = nn.Sequential()
-        for i_layer in range(27):
+        for i_layer in range(39):
             self.vgg.add_module(str(i_layer), vgg_full[i_layer])
 
         im_ch = 128
         inter = 128
-        self.features = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(256, inter, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv2d(inter, im_ch, kernel_size=3, stride=1, padding=1),
-                                      nn.ReLU(inplace=True))
 
+        self.features = nn.Sequential(nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(256),
+                                      nn.ReLU(inplace=True),
+
+                                      nn.Conv2d(256, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(inter),
+                                      nn.ReLU(inplace=True),
+
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(inter),
+                                      nn.ReLU(inplace=True),
+
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(inter),
+                                      nn.ReLU(inplace=True),
+
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(inter),
+                                      nn.ReLU(inplace=True),
+
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(inter),
+                                      nn.ReLU(inplace=True),
+
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(inter),
+                                      nn.ReLU(inplace=True),
+
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(inter),
+                                      nn.ReLU(inplace=True),
+
+                                      nn.Conv2d(inter, inter, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(inter),
+                                      nn.ReLU(inplace=True),
+
+                                      nn.Conv2d(inter, im_ch, kernel_size=3, stride=1, padding=1),
+                                      nn.BatchNorm2d(im_ch),
+                                      nn.ReLU(inplace=True))
         # Map generation
         self.cas1 = DOPE_2p2.create_stage(128,
                                              numBeliefMap + numAffinity, True)
@@ -689,15 +711,18 @@ class DOPE_2p2(nn.Module):
 
         # First convolution
         model.append(nn.Conv2d(in_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
+        model.append(nn.BatchNorm2d(mid_channels))
         model.append(nn.ReLU(inplace=True))
 
         # Middle convolutions
         for i in range(count):
             model.append(nn.Conv2d(mid_channels, mid_channels, kernel_size=kernel, stride=1, padding=padding))
+            model.append(nn.BatchNorm2d(mid_channels))
             model.append(nn.ReLU(inplace=True))
 
         # Penultimate convolution
         model.append(nn.Conv2d(mid_channels, final_channels, kernel_size=1, stride=1))
+        model.append(nn.BatchNorm2d(final_channels))
         model.append(nn.ReLU(inplace=True))
 
         # Last convolution

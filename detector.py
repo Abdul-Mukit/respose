@@ -79,6 +79,8 @@ class ModelData(object):
             net = DOPE_2()
         elif self.network == "DOPE_2.1":
             net = DOPE_2p1()
+        elif self.network == "DOPE_2.2":
+            net = DOPE_2p2()
         elif self.network == "ResNetPose":
             net = ResNetPose()
 

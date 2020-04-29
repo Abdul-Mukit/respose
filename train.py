@@ -184,7 +184,7 @@ parser.add_argument('--datasize',
 
 parser.add_argument('--network',
                     default="DOPE",
-                    help='choose either "DOPE", "DOPE_2", "DOPE_2.1","ResNetPose" '
+                    help='choose either "DOPE", "DOPE_2", "DOPE_2.1","DOPE_2.2" ,"ResNetPose" '
                          'to train. name outf, namefile accordingly')
 
 parser.add_argument('--LrSchedule',
@@ -330,10 +330,12 @@ elif opt.network == "DOPE_2": # previously named ResPoseNetwork
     net = DOPE_2(pretrained=opt.pretrained)
 elif opt.network == "DOPE_2.1":
     net = DOPE_2p1(pretrained=opt.pretrained)
+elif opt.network == "DOPE_2.2":
+    net = DOPE_2p2(pretrained=opt.pretrained)
 elif opt.network == "ResNetPose":
     net = ResNetPose(pretrained=opt.pretrained)
 else:
-    sys.exit("Select network from 'DOPE', 'DOPE_2', 'DOPE_2.1', 'ResNetPose' to train")
+    sys.exit("Select network from 'DOPE', 'DOPE_2', 'DOPE_2.1', 'DOPE_2.2' , 'ResNetPose' to train")
 
 net = net.to(device)
 print(net)

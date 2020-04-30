@@ -5,7 +5,7 @@ from detector import *
 
 ## Settings
 name = 'meat'
-net_path = 'weights/dope_meat_v1/net_dope_meat_v1_60.pth'
+net_path = 'weights/dope1_meat/net_dope_meat_v1_60.pth'
 # net_path = 'weights/rp_meat_v1/net_rp_meat_v1_60.pth'
 gpu_id = 0
 img_path = 'Dataset/dev/000000.left.jpg'

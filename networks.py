@@ -7,6 +7,9 @@ import torch
 from torchvision.models.resnet import BasicBlock, conv3x3, conv1x1
 
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
 class DopeNetwork(nn.Module):
     def __init__(
             self,

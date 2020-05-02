@@ -1,4 +1,5 @@
-This branch is for the semester project of Advanced Machine Learning course.
+This branch is for the semester project of Advanced Machine Learning course.  
+Presentation video link: [youtube](https://youtu.be/wGJTIeSog-k) 
   
 ## Abstract
 In this project, I experiment with the network designing/modification of DOPE. 

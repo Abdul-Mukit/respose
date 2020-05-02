@@ -19,7 +19,9 @@ my observations and learnings in the discussion section.
 Use `pip install -r requirements.txt` to install the requirements.
 
 ## Downloads
-TODO: add weights in public folder in dropbox
+TODO: add weights in public folder in dropbox. (files are still being uploaded)  
+Size of download will be ~15GB in total.    
+Place the downloaded "Dataset" and "weights" folder inside "respose" folder.
 
 ## Usage:
 Project report: Use `Project.ipynb`

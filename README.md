@@ -1,5 +1,6 @@
-This branch is for project of Advanced Machine Learning course.  
-# Abstract
+This branch is for the semester project of Advanced Machine Learning course.
+  
+## Abstract
 In this project, I experiment with the network designing/modification of DOPE. 
 DOPE stands for Deep Object Pose Estimation. It is a 6 DoF pose estimator built 
 with approximately 92 conv layers. I wanted to learn more about designing such 
@@ -13,13 +14,13 @@ like DOPE but built on ResNet34 and has resedual connections with-in each cascad
 presented network, I demostrate an estimation of thier performance. At the end, I conclude with 
 my observations and learnings in the discussion section.
 
-# Installation
+## Installation
 Use `pip install -r requirements.txt` to install the requirements.
 
-# Downloads
+## Downloads
 TODO: add weights in public folder in dropbox
 
-# Usage:
+## Usage:
 Project report: Use `Project.ipynb`
 Open in a jupyter-notebook or in google-colab to play around with the file.  
 
@@ -27,3 +28,23 @@ Training: Use `train.py`
 Sample command from terminal: 
 `python train.py --network "DOPE_2.2" --outf "dope2.2_meat" --data "/home/mukit/Datasets/fat/single/010_potted_meat_can_16k/" --epoch 60 --featureNet "vgg" --lr 0.0001 --gpuids 1`  
 More details of training can be found inside the `train.py` file.
+
+## Network Digrams:
+Following are simple block diagrams of original DOPE network and my proposed networks.
+ 
+### Original DOPE Network:
+![Original DOPE](docs/DOPE_diagram.png)
+
+### DOPE_2 Network:
+![DOPE_2](docs/DOPE_2.png)
+
+### DOPE_2.1 Network:
+![DOPE_2.1](docs/DOPE_2.1.png)
+
+### ResNetPose full Network:
+![ResNetPose](docs/ResnetPose_part1.png)
+
+### ResNetPose Zoomed Cascades Part:
+![ResNetPose](docs/ResnetPose_part2.png)
+
+

@@ -6,25 +6,6 @@ from __future__ import print_function
 
 ######################################################
 """
-REQUIREMENTS:
-matplotlib==2.2.2
-simplejson==3.16.0
-numpy==1.14.1
-opencv_python==3.4.3.18
-horovod==0.13.5
-photutils==0.5
-scipy==1.1.0
-torch==0.4.0
-pyquaternion==0.9.2
-tqdm==4.25.0
-pyrr==0.9.2
-Pillow==5.2.0
-torchvision==0.2.1
-PyYAML==3.13
-"""
-
-######################################################
-"""
 HOW TO TRAIN DOPE
 This is the DOPE training code.  
 It is provided as a convenience for researchers, but it is otherwise unsupported.

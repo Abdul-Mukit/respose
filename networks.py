@@ -181,7 +181,6 @@ class DopeNetwork(nn.Module):
         return model
 
 
-# ResPoseNetwork originally
 class DOPE_2(nn.Module):
     def __init__(
             self,

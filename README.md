@@ -4,15 +4,15 @@ Presentation video link: [youtube](https://youtu.be/wGJTIeSog-k)
 In this project, I experiment with the network designing/modification of DOPE. 
 DOPE stands for Deep Object Pose Estimation. It is a 6 DoF pose estimator built 
 with approximately 92 conv layers. I wanted to learn more about designing such 
-ellaborate neural networks by tyring to play around with the achitecture of 
+elaborate neural networks by tyring to play around with the architecture of 
 original DOPE. This project is the result of 1 months work, where I have experimented with 
-more than 20 different versions. I could not present my findings or learnings from each of them 
+more than 20 different versions. I could not present my findings from each of them 
 so in this file I present a few of them. First, I present the effects of transfer learning. 
 Then I introduce DOPE_2, DOPE_2.1, DOPE_2.2 which are modifications of original DOPE 
 architectures. Finally, I present a network called ResNetPose, which is a pose estimator 
 like DOPE but built on ResNet34 and has resedual connections with-in each cascade. For each 
-presented network, I demostrate an estimation of thier performance. At the end, I conclude with 
-my observations and learnings in the discussion section.
+presented network, I demonstrate an estimation of their performance. At the end, I conclude with 
+my observations in the discussion section.
 
 ## Installation
 Use `pip install -r requirements.txt` to install the requirements.

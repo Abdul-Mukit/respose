@@ -1,7 +1,7 @@
 Presentation video link: [youtube](https://youtu.be/wGJTIeSog-k) 
   
 ## Abstract
-In this project, I experiment with the network designing/modification of DOPE. 
+In this project, I experiment with the network designing/modification of [DOPE](https://github.com/NVlabs/Deep_Object_Pose). 
 DOPE stands for Deep Object Pose Estimation. It is a 6 DoF pose estimator built 
 with approximately 92 conv layers. I wanted to learn more about designing such 
 elaborate neural networks by tyring to play around with the architecture of 

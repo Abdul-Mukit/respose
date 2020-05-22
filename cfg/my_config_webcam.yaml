@@ -4,8 +4,8 @@
 weights: {
     # "cracker":"cracker_60.pth",
     # "gelatin":"gelatin_60.pth",
-     "meat":"meat_20.pth"
-#     "meat":"train_dope_meat_v1/net_dope_meat_v1_60.pth"
+#     "meat":"meat_20.pth"
+     "meat":"dope1.1_meat/net_epoch_60.pth"
     # "mustard":"mustard_60.pth",
     # "soup":"soup_60.pth",
     #"sugar":"sugar_60.pth",

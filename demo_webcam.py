@@ -12,7 +12,7 @@ yaml_path = 'cfg/{}'.format(config_name)
 with open(yaml_path, 'r') as stream:
     try:
         print("Loading DOPE parameters from '{}'...".format(yaml_path))
-        params = yaml.load(stream)
+        params = yaml.load(stream, Loader=yaml.FullLoader)
         print('    Parameters loaded.')
     except yaml.YAMLError as exc:
         print(exc)
@@ -95,6 +95,7 @@ while True:
                 continue
             loc = result["location"]
             ori = result["quaternion"]
+            print("Ori: " + str(ori)) # TODO: remove dubug print code
 
             # Draw the cube
             if None not in result['projected_points']:

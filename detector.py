@@ -45,7 +45,7 @@ transform = transforms.Compose([
 class ModelData(object):
     '''This class contains methods for loading the neural network'''
 
-    def __init__(self, name="", net_path="", gpu_id=0, network="DOPE_2"):
+    def __init__(self, name="", net_path="", gpu_id=0, network="DOPE"):
         self.name = name
         self.net_path = net_path  # Path to trained network model
         self.net = None  # Trained network

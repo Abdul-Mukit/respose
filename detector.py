@@ -84,8 +84,15 @@ class ModelData(object):
         elif self.network == "ResNetPose":
             net = ResNetPose()
 
-        net = net.to(device)  # For model not trained with dataparallel
-        net.load_state_dict(torch.load(path))
+        try:
+            net = net.to(device)  # For model not trained with dataparallel
+            net.load_state_dict(torch.load(path))
+        except:
+            net = torch.nn.DataParallel(net, [self.gpu_id]).cuda()  # For model trained with dataparallel
+            net.load_state_dict(torch.load(path))
+
+        # net = net.to(device)  # For model not trained with dataparallel
+        # net.load_state_dict(torch.load(path))
         net.eval()
         print('    Model loaded in {} seconds.'.format(
             time.time() - model_loading_start_time))

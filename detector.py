@@ -88,7 +88,7 @@ class ModelData(object):
             net = net.to(device)  # For model not trained with dataparallel
             net.load_state_dict(torch.load(path))
         except:
-            net = torch.nn.DataParallel(net, [self.gpu_id]).cuda()  # For model trained with dataparallel
+            net = torch.nn.DataParallel(net, [self.gpu_id]).to(device)  # For model trained with dataparallel
             net.load_state_dict(torch.load(path))
 
         # net = net.to(device)  # For model not trained with dataparallel

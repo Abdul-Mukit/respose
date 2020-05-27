@@ -99,7 +99,7 @@ while True:
             ori = result["quaternion"]
 
             # Sending to unity client
-            loc = np.array(loc)/10 # cm to meter conversion
+            loc = np.array(loc)/100  # cm to meter conversion
             loc = loc.tolist()
             dope_server.send(loc + ori.tolist())
 

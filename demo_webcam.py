@@ -2,11 +2,13 @@ from detector import *
 import yaml
 import time
 from dope_utilities import *
+from server import DopeServer
 
 # Settings
 cuda_device = 0 # device to run demo on
 network = "DOPE" # Select between "DOPE" and "ResPose" to run.
 config_name = "my_config_webcam.yaml"
+dope_server = DopeServer(SERVER_IP='127.0.0.1', PORT_NUMBER=54000, SIZE=256)
 
 yaml_path = 'cfg/{}'.format(config_name)
 with open(yaml_path, 'r') as stream:
@@ -95,7 +97,11 @@ while True:
                 continue
             loc = result["location"]
             ori = result["quaternion"]
-            print("Ori: " + str(ori)) # TODO: remove dubug print code
+
+            # Sending to unity client
+            loc = np.array(loc)/10 # cm to meter conversion
+            loc = loc.tolist()
+            dope_server.send(loc + ori.tolist())
 
             # Draw the cube
             if None not in result['projected_points']:

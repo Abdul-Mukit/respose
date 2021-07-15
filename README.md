@@ -16,7 +16,7 @@ estimation of their performance. At the end, I conclude with my observations in 
 Use `pip install -r requirements.txt` to install the requirements.
 
 ## Downloads
-Trained weights and dataset are uploaded in this [link](https://sooners-my.sharepoint.com/:f:/g/personal/abdul_mukit_ou_edu/Em6yJ_XHDZdAhzZ7L4E9fFABhW61w9zvSG7cuTwfRgUuyA?e=UYN0JY).   
+Trained weights and dataset are uploaded in this [link](https://sooners-my.sharepoint.com/:f:/g/personal/abdul_mukit_ou_edu/Em6yJ_XHDZdAhzZ7L4E9fFABhW61w9zvSG7cuTwfRgUuyA?e=Ds60Fk).   
 Size of download will be ~15GB in total.    
 Place the downloaded "Dataset" and "weights" folder inside "respose" folder.
 
